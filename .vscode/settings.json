@@ -3,7 +3,8 @@
         "timer.h": "c",
         "utils.h": "c",
         "stdio.h": "c",
-        "mmio.h": "c"
+        "mmio.h": "c",
+        "_mb_cur_max.h": "c"
     },
     "makefile.configureOnOpen": false,
     "C_Cpp.dimInactiveRegions": false

@@ -15,7 +15,7 @@ omp_sched_t parseSchedule(const char *name) {
         return omp_sched_auto;
     }
 #else
-    (void)name;  // Evita warning unused parameter
+    (void)name; 
     return omp_sched_auto;
 #endif
 }

@@ -13,9 +13,7 @@ int main(int argc, char *argv[])
 {
     srand(time(NULL));
     double start, finish, elapsed; 
-    int ROWS, COLS, nz;
-    int *Arow, *Acol;
-    double *Aval;
+    SparseMatrix matrix;
 
     //#pragma region Load_Matrix_To_CSR
     if (argc < 2)
@@ -46,27 +44,27 @@ int main(int argc, char *argv[])
         #endif
     }
 
-    if (loadMatrixMarket(argv[1], &ROWS, &COLS, &nz, &Arow, &Acol, &Aval) != 0)
+    if (loadMatrixMarket(argv[1], &matrix) != 0)
     {
         fprintf(stderr, "Failed to load matrix.\n");
         exit(EXIT_FAILURE);
     }
-    printf("Matrix loaded: %d x %d, non-zeros: %d\n", ROWS, COLS, nz);
+    printf("Matrix loaded: %d x %d, non-zeros: %d\n", matrix.rows, matrix.cols, matrix.nz);
 
-    int* row_ptr = malloc((ROWS + 1) * sizeof(int));
-    int* col_ind = malloc(nz * sizeof(int));
-    double* vals = malloc(nz * sizeof(double));
+    matrix.row_ptr = malloc((matrix.rows + 1) * sizeof(int));
+    matrix.col_ind = malloc(matrix.nz * sizeof(int));
+    matrix.vals = malloc(matrix.nz * sizeof(double));
     
-    COOtoCSR(ROWS, nz, Arow, Acol, Aval, row_ptr, col_ind, vals);
+    COOtoCSR(&matrix);
     //#pragma endregion
 
     //#pragma region SpMV_Matrix_Vector_Multiplication
-        double* rvec = (double*)malloc(COLS * sizeof(double));
-        rvec = randVect(rvec, COLS);
+        double* rvec = (double*)malloc(matrix.cols * sizeof(double));
+        rvec = randVect(rvec, matrix.cols);
 
         printf("\n****************************\nSpMV multiplication...\n\n");
         GET_TIME(start)
-        spVM(row_ptr, col_ind, vals, rvec, ROWS);
+        spVM(&matrix, rvec);
         GET_TIME(finish)
         elapsed = finish - start;
 
@@ -77,12 +75,7 @@ int main(int argc, char *argv[])
     //#pragma endregion
     
     //#pragma region Clearing_Memory
-        free(Arow);
-        free(Acol);
-        free(Aval);
-        free(row_ptr);
-        free(col_ind);
-        free(vals);
+        freeSparseMatrix(&matrix);
         free(rvec);
     //#pragma endregion
 
