@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "timer.h": "c",
+        "utils.h": "c",
+        "stdio.h": "c",
+        "mmio.h": "c"
+    },
+    "makefile.configureOnOpen": false,
+    "C_Cpp.dimInactiveRegions": false
+}

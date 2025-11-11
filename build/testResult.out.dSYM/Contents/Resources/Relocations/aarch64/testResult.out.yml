@@ -1,0 +1,36 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     './build/testResult.out'
+relocations:
+  - { offset: 0x15E, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x160, symBinAddr: 0x100002680, symSize: 0x280 }
+  - { offset: 0x2C6, size: 0x8, addend: 0x0, symName: _mm_is_valid, symObjAddr: 0x0, symBinAddr: 0x100000660, symSize: 0x88 }
+  - { offset: 0x565, size: 0x8, addend: 0x0, symName: _mm_typecode_to_str, symObjAddr: 0xAE0, symBinAddr: 0x100001140, symSize: 0x168 }
+  - { offset: 0x65C, size: 0x8, addend: 0x0, symName: _mm_write_mtx_crd, symObjAddr: 0xEA8, symBinAddr: 0x100001508, symSize: 0x228 }
+  - { offset: 0x739, size: 0x8, addend: 0x0, symName: _mm_write_banner, symObjAddr: 0xE44, symBinAddr: 0x1000014A4, symSize: 0x64 }
+  - { offset: 0x79D, size: 0x8, addend: 0x0, symName: _mm_read_mtx_crd, symObjAddr: 0x880, symBinAddr: 0x100000EE0, symSize: 0x220 }
+  - { offset: 0x8BA, size: 0x8, addend: 0x0, symName: _mm_read_mtx_crd_entry, symObjAddr: 0x7C0, symBinAddr: 0x100000E20, symSize: 0xC0 }
+  - { offset: 0x940, size: 0x8, addend: 0x0, symName: _mm_read_mtx_crd_data, symObjAddr: 0x640, symBinAddr: 0x100000CA0, symSize: 0x180 }
+  - { offset: 0x9F8, size: 0x8, addend: 0x0, symName: _mm_write_mtx_array_size, symObjAddr: 0x600, symBinAddr: 0x100000C60, symSize: 0x40 }
+  - { offset: 0xA47, size: 0x8, addend: 0x0, symName: _mm_read_mtx_array_size, symObjAddr: 0x540, symBinAddr: 0x100000BA0, symSize: 0xC0 }
+  - { offset: 0xAB6, size: 0x8, addend: 0x0, symName: _mm_read_mtx_crd_size, symObjAddr: 0x460, symBinAddr: 0x100000AC0, symSize: 0xE0 }
+  - { offset: 0xB35, size: 0x8, addend: 0x0, symName: _mm_write_mtx_crd_size, symObjAddr: 0x420, symBinAddr: 0x100000A80, symSize: 0x40 }
+  - { offset: 0xB94, size: 0x8, addend: 0x0, symName: _mm_read_banner, symObjAddr: 0x88, symBinAddr: 0x1000006E8, symSize: 0x398 }
+  - { offset: 0xCE5, size: 0x8, addend: 0x0, symName: _mm_read_unsymmetric_sparse, symObjAddr: 0xC48, symBinAddr: 0x1000012A8, symSize: 0x1FC }
+  - { offset: 0xE15, size: 0x8, addend: 0x0, symName: _mm_is_valid, symObjAddr: 0x0, symBinAddr: 0x100000660, symSize: 0x88 }
+  - { offset: 0xE58, size: 0x8, addend: 0x0, symName: _mm_strdup, symObjAddr: 0xAA0, symBinAddr: 0x100001100, symSize: 0x40 }
+  - { offset: 0xEA0, size: 0x8, addend: 0x0, symName: _parseSchedule, symObjAddr: 0x0, symBinAddr: 0x100001740, symSize: 0xA0 }
+  - { offset: 0xF88, size: 0x8, addend: 0x0, symName: _printOmpConfig, symObjAddr: 0xC4, symBinAddr: 0x100001804, symSize: 0x80 }
+  - { offset: 0xFC3, size: 0x8, addend: 0x0, symName: _setOmpConfig, symObjAddr: 0xA0, symBinAddr: 0x1000017E0, symSize: 0x24 }
+  - { offset: 0xFF1, size: 0x8, addend: 0x0, symName: _parseSchedule, symObjAddr: 0x0, symBinAddr: 0x100001740, symSize: 0xA0 }
+  - { offset: 0x102E, size: 0x8, addend: 0x0, symName: _spVM._omp_fn.0, symObjAddr: 0x0, symBinAddr: 0x1000018A0, symSize: 0xC0 }
+  - { offset: 0x12C2, size: 0x8, addend: 0x0, symName: _spVM, symObjAddr: 0xC0, symBinAddr: 0x100001960, symSize: 0x70 }
+  - { offset: 0x1329, size: 0x8, addend: 0x0, symName: _spVM._omp_fn.0, symObjAddr: 0x0, symBinAddr: 0x1000018A0, symSize: 0xC0 }
+  - { offset: 0x146B, size: 0x8, addend: 0x0, symName: _randVect, symObjAddr: 0xD60, symBinAddr: 0x100002600, symSize: 0x78 }
+  - { offset: 0x14BC, size: 0x8, addend: 0x0, symName: _COOtoCSR, symObjAddr: 0xBE0, symBinAddr: 0x100002480, symSize: 0x180 }
+  - { offset: 0x15FB, size: 0x8, addend: 0x0, symName: _sortCSRRows, symObjAddr: 0x74C, symBinAddr: 0x100001FEC, symSize: 0x494 }
+  - { offset: 0x16DC, size: 0x8, addend: 0x0, symName: _printCSR, symObjAddr: 0x600, symBinAddr: 0x100001EA0, symSize: 0x14C }
+  - { offset: 0x1827, size: 0x8, addend: 0x0, symName: _printCOO, symObjAddr: 0x480, symBinAddr: 0x100001D20, symSize: 0x180 }
+  - { offset: 0x19D3, size: 0x8, addend: 0x0, symName: _loadMatrixMarket, symObjAddr: 0x130, symBinAddr: 0x1000019D0, symSize: 0x250 }
+  - { offset: 0x1AA6, size: 0x8, addend: 0x0, symName: _printVectorInt, symObjAddr: 0x380, symBinAddr: 0x100001C20, symSize: 0x80 }
+  - { offset: 0x1AF8, size: 0x8, addend: 0x0, symName: _printVectorDouble, symObjAddr: 0x400, symBinAddr: 0x100001CA0, symSize: 0x80 }
+...
