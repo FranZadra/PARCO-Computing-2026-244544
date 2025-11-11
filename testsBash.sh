@@ -4,11 +4,11 @@
 SRC_DIR="src"
 INCLUDE_DIR="include"
 EXEC="./build/testResult.out"
-MATRICES=("1138_bus.mtx" "ash85.mtx" "bcsstk13.mtx" "bcsstk18.mtx" "bcsstk32.mtx")
-OUTPUT="benchResults.csv"
+MATRICES=("1138_bus.mtx" "bcsstk13.mtx" "bcsstk18.mtx" "bcsstk32.mtx")
+OUTPUT_TIME="benchResults.csv"
+OUTPUT_PERF="benchResults_perf.csv"
 
-CC="gcc-15"
-
+CC="gcc"
 REPEATS=10
 OPT_FLAGS=("" "-O1" "-O2" "-O3" "-Ofast")
 
@@ -17,13 +17,14 @@ CHUNKSIZES=(1 10 100 1000)
 THREADS=(1 2 4 8 16 32 64)
 
 # Initialize CSV
-echo "matrix,mode,opt_level,schedule,chunk_size,num_threads,perf,run,value" > "$OUTPUT"
+echo "matrix,mode,opt_level,schedule,chunk_size,num_threads,run,elapsed_time" > "$OUTPUT_TIME"
+echo "matrix,mode,opt_level,schedule,chunk_size,num_threads,run,elapsed_time,L1_loads,L1_misses,L1_miss_rate,LLC_loads,LLC_misses,LLC_miss_rate" > "$OUTPUT_PERF"
 
 # Compilation function
 compile_code() {
     local flags="$1"
     local parallel="$2"
-    echo "Compilation with flags: $flags (OpenMP: $parallel)"
+    echo -e "\nCompilation with flags: $flags (OpenMP: $parallel)"
 
     rm -f $EXEC
     mkdir -p build
@@ -53,37 +54,62 @@ run_and_record() {
     for ((r=1; r<=REPEATS; r++)); do
         if [ "$use_perf" = "yes" ]; then
             if [ "$mode" = "sequential" ]; then
-                RESULT=$(perf stat -x, -e cache-misses "$EXEC" "data/$matrix" 2>&1 \
-                         | grep "cache-misses" | awk -F',' '{print $1}')
+                PERF_OUTPUT=$(perf stat -x, -e L1-dcache-loads,L1-dcache-load-misses,LLC-loads,LLC-load-misses \
+                    "$EXEC" "data/$matrix" 2>&1)
             else
-                RESULT=$(perf stat -x, -e cache-misses "$EXEC" "data/$matrix" "$threads" "$schedule" "$chunk" 2>&1 \
-                         | grep "cache-misses" | awk -F',' '{print $1}')
+                PERF_OUTPUT=$(perf stat -x, -e L1-dcache-loads,L1-dcache-load-misses,LLC-loads,LLC-load-misses \
+                    "$EXEC" "data/$matrix" "$threads" "$schedule" "$chunk" 2>&1)
             fi
-            echo "Perf measurement not implemented for this test. Skipping..."
-            perf_flag="yes"
+
+            L1_LOADS=$(echo "$PERF_OUTPUT" | grep "L1-dcache-loads" | awk -F',' '{print $1}')
+            L1_MISSES=$(echo "$PERF_OUTPUT" | grep "L1-dcache-load-misses" | awk -F',' '{print $1}')
+
+            LLC_LOADS=$(echo "$PERF_OUTPUT" | grep "LLC-loads" | awk -F',' '{print $1}')
+            LLC_MISSES=$(echo "$PERF_OUTPUT" | grep "LLC-load-misses" | awk -F',' '{print $1}')
+
+            if [ ! -z "$L1_LOADS" ] && [ ! -z "$L1_MISSES" ] && [ "$L1_LOADS" != "0" ]; then
+                L1_MISS_RATE=$(awk "BEGIN {printf \"%.2f\", ($L1_MISSES / $L1_LOADS) * 100}")
+            else
+                L1_MISS_RATE="N/A"
+            fi
+
+            if [ ! -z "$LLC_LOADS" ] && [ ! -z "$LLC_MISSES" ] && [ "$LLC_LOADS" != "0" ]; then
+                LLC_MISS_RATE=$(awk "BEGIN {printf \"%.2f\", ($LLC_MISSES / $LLC_LOADS) * 100}")
+            else
+                LLC_MISS_RATE="N/A"
+            fi
+
+            elapsed_time=$(echo "$PERF_OUTPUT" | grep -E "Result_time:" | tail -1 | awk '{print $2}')
+
+            if [ -z "$elapsed_time" ]; then
+                elapsed_time="ERROR"
+            fi
+
+            # CSV perf
+            echo "${matrix},${mode},${opt},${schedule},${chunk},${threads},${r},${elapsed_time},${L1_LOADS},${L1_MISSES},${L1_MISS_RATE},${LLC_LOADS},${LLC_MISSES},${LLC_MISS_RATE}" >> "$OUTPUT_PERF"
+            # Terminal perf
+            echo "→ ${matrix} | ${mode} ${opt} | sched=${schedule} chunk=${chunk} threads=${threads} | run=${r} | time=${elapsed_time}s | L1miss=${L1_MISSES}/${L1_LOADS} (${L1_MISS_RATE}%) | LLCmiss=${LLC_MISSES}/${LLC_LOADS} (${LLC_MISS_RATE}%)"
         else
             if [ "$mode" = "sequential" ]; then
-                RESULT=$("$EXEC" "data/$matrix" 2>&1 \
-                        | grep "Result_time:" | awk '{print $2}')
+                elapsed_time=$("$EXEC" "data/$matrix" 2>&1 | grep "Result_time:" | awk '{print $2}')
             else
-                RESULT=$("$EXEC" "data/$matrix" "$threads" "$schedule" "$chunk" 2>&1 \
-                        | grep "Result_time:" | awk '{print $2}')
-fi
-perf_flag="no"
-        fi
+                elapsed_time=$("$EXEC" "data/$matrix" "$threads" "$schedule" "$chunk" 2>&1 | grep "Result_time:" | awk '{print $2}')
+            fi
 
-        if [ -z "$RESULT" ]; then
-            echo "ERROR: failed execution/output not found!"
-            RESULT="ERROR"
-        fi
+            if [ -z "$elapsed_time" ]; then
+                elapsed_time="ERROR"
+            fi
 
-        echo "${matrix},${mode},${opt},${schedule},${chunk},${threads},${perf_flag},${r},${RESULT}" >> "$OUTPUT"
-        echo "→ ${matrix} | ${mode} ${opt} | sched=${schedule} chunk=${chunk} threads=${threads} | perf=${perf_flag} | run=${r} | result=${RESULT}"
+            # CSV without perf
+            echo "${matrix},${mode},${opt},${schedule},${chunk},${threads},${r},${elapsed_time}" >> "$OUTPUT_TIME"
+            # Terminal
+            echo "→ ${matrix} | ${mode} ${opt} | sched=${schedule} chunk=${chunk} threads=${threads} | run=${r} | time=${elapsed_time}s"
+        fi
     done
 }
 
 # SEQUENTIAL
-echo ">>> Parte SEQUENZIALE..."
+echo -e "\n\n>>> Parte SEQUENZIALE...\n\n"
 for matrix in "${MATRICES[@]}"; do
   for opt in "${OPT_FLAGS[@]}"; do
     compile_code "$opt" "no"
@@ -94,7 +120,7 @@ for matrix in "${MATRICES[@]}"; do
 done
 
 # PARALLEL
-echo ">>> Parte PARALLELA..."
+echo -e "\n\n>>> Parte PARALLELA...\n\n"
 compile_code "-O3" "yes"
 
 for matrix in "${MATRICES[@]}"; do
@@ -109,4 +135,6 @@ for matrix in "${MATRICES[@]}"; do
   done
 done
 
-echo "Done testing! Results are saved in: $OUTPUT"
+echo -e "\nDone testing!"
+echo "Time results saved in: $OUTPUT_TIME"
+echo "Perf results saved in: $OUTPUT_PERF"

@@ -4,14 +4,16 @@
 #include "utils.h"
 #include "mmio.h"
 
+int i,j;
+
 void spVM(int *row_ptr, int *col_ind, double *vals , double* rvec, int ROWS) {
     double* res = (double*)malloc(ROWS*sizeof(double));
     #ifdef _OPENMP
-    #pragma omp parallel for schedule(runtime)
+        #pragma omp parallel for schedule(runtime)
     #endif
-    for (int i = 0; i < ROWS; ++i) {
+    for (i = 0; i < ROWS; ++i) {
         res[i] = 0;
-        for (int j = row_ptr[i]; j < row_ptr[i+1]; ++j) {
+        for (j = row_ptr[i]; j < row_ptr[i+1]; ++j) {
             res[i] += vals[j] * rvec[col_ind[j]];
         }
     }
@@ -78,7 +80,7 @@ int loadMatrixMarket(const char *filename,int *ROWS, int *COLS, int *nz, int **A
 
 void printVectorInt(char* name, int *v, int size) {
     printf("%s[", name);
-    for (int i = 0; i < size; i++) {
+    for (i = 0; i < size; i++) {
         printf(" %d ", v[i]);
     }
     printf("]\n");
@@ -86,7 +88,7 @@ void printVectorInt(char* name, int *v, int size) {
 
 void printVectorDouble(char* name, double *v, int size) {
     printf("%s[", name);
-    for (int i = 0; i < size; i++) {
+    for (i = 0; i < size; i++) {
         printf(" %f ", v[i]);
     }
     printf("]\n");
@@ -107,11 +109,11 @@ void printCSR(int ROWS, int* row_ptr, int* col_ind, double* vals) {
 }
 
 void sortCSRRows(int ROWS, int* row_ptr, int* col_ind, double* vals) {
-    for (int i = 0; i < ROWS; i++) {
+    for (i = 0; i < ROWS; i++) {
         int start = row_ptr[i];
         int end = row_ptr[i+1];
 
-        for (int j = start + 1; j < end; j++) {
+        for (j = start + 1; j < end; j++) {
             int key_col = col_ind[j];
             double key_val = vals[j];
             int k = j - 1;
@@ -129,24 +131,24 @@ void sortCSRRows(int ROWS, int* row_ptr, int* col_ind, double* vals) {
 
 void COOtoCSR(int ROWS, int nz, int* Arow, int* Acol, double* Aval, int* row_ptr, int* col_ind, double* vals) {
     //printf("\nConverting the matrix from COO to CSR format...\n");
-        for (int i = 0; i <= ROWS; i++) {
+        for (i = 0; i <= ROWS; i++) {
             row_ptr[i] = 0;
         }
 
-        for (int i = 0; i < nz; i++) {
+        for (i = 0; i < nz; i++) {
             row_ptr[Arow[i] + 1]++;
         }
 
-        for (int i = 1; i <= ROWS; i++) {
+        for (i = 1; i <= ROWS; i++) {
             row_ptr[i] += row_ptr[i - 1];
         }
 
         int* current_pos = (int *)malloc(ROWS * sizeof(int));
-        for (int i = 0; i < ROWS; i++) {
+        for (i = 0; i < ROWS; i++) {
             current_pos[i] = row_ptr[i];
         }
 
-        for (int i = 0; i < nz; i++) {
+        for (i = 0; i < nz; i++) {
             int row = Arow[i];
             int dest = current_pos[row];
 
@@ -164,7 +166,7 @@ void COOtoCSR(int ROWS, int nz, int* Arow, int* Acol, double* Aval, int* row_ptr
 }
 
 double* randVect(double* rvec, int COLS){
-    for (int i = 0; i < COLS; i++) {
+    for (i = 0; i < COLS; i++) {
         rvec[i] = ((double)rand() / RAND_MAX) * 8.0 - 4.0;
     }
     return rvec;

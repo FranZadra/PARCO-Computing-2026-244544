@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     int *Arow, *Acol;
     double *Aval;
 
-    #pragma region Load_Matrix_To_CSR
+    //#pragma region Load_Matrix_To_CSR
     if (argc < 2)
     {
         fprintf(stderr, "Usage: %s <matrix_market_file>\n", argv[0]);
@@ -58,9 +58,9 @@ int main(int argc, char *argv[])
     double* vals = malloc(nz * sizeof(double));
     
     COOtoCSR(ROWS, nz, Arow, Acol, Aval, row_ptr, col_ind, vals);
-    #pragma endregion
+    //#pragma endregion
 
-    #pragma region SpMV_Matrix_Vector_Multiplication
+    //#pragma region SpMV_Matrix_Vector_Multiplication
         double* rvec = (double*)malloc(COLS * sizeof(double));
         rvec = randVect(rvec, COLS);
 
@@ -74,9 +74,9 @@ int main(int argc, char *argv[])
         printf("SpMV multiplication completed.\n****************************\n");
 
 
-    #pragma endregion
+    //#pragma endregion
     
-    #pragma region Clearing_Memory
+    //#pragma region Clearing_Memory
         free(Arow);
         free(Acol);
         free(Aval);
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
         free(col_ind);
         free(vals);
         free(rvec);
-    #pragma endregion
+    //#pragma endregion
 
 	return 0;
 }
