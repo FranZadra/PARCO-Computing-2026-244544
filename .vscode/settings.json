@@ -7,5 +7,7 @@
         "_mb_cur_max.h": "c"
     },
     "makefile.configureOnOpen": false,
-    "C_Cpp.dimInactiveRegions": false
+    "C_Cpp.dimInactiveRegions": false,
+    "python-envs.defaultEnvManager": "ms-python.python:system",
+    "python-envs.pythonProjects": []
 }
