@@ -5,8 +5,8 @@ SRC_DIR="../src"
 INCLUDE_DIR="../include"
 EXEC="../results/testResult.out"
 MATRICES=("Andrews.mtx" "bcsstk27.mtx" "bcsstk32.mtx" "hood.mtx" "msdoor.mtx")
-OUTPUT_TIME="../plots/benchResults.csv"
-OUTPUT_PERF="../plots/benchResults_perf.csv"
+OUTPUT_TIME="../results/benchResults.csv"
+OUTPUT_PERF="../results/benchResults_perf.csv"
 
 CC="gcc"
 REPEATS=10
@@ -27,7 +27,7 @@ compile_code() {
     echo -e "\nCompilation with flags: $flags (OpenMP: $parallel)"
 
     rm -f $EXEC
-    mkdir -p results
+    mkdir -p ../results
 
     if [ "$parallel" = "yes" ]; then
         $CC -g -Wall $flags -fopenmp -I"$INCLUDE_DIR" "$SRC_DIR"/*.c -o "$EXEC"
@@ -51,14 +51,16 @@ run_and_record() {
     local threads="$6"
     local use_perf="$7"
 
-    for ((r=1; r<=REPEATS; r++)); do
-        if [ "$use_perf" = "yes" ]; then
+
+    if [ "$use_perf" = "yes" ]; then
+        # CON PERF: esegui 10 volte l'eseguibile con repeats=1
+        for ((r=1; r<=REPEATS; r++)); do
             if [ "$mode" = "sequential" ]; then
                 PERF_OUTPUT=$(perf stat -x, -e L1-dcache-loads,L1-dcache-load-misses,LLC-loads,LLC-load-misses \
-                    "$EXEC" "../data/$matrix" 2>&1)
+                    "$EXEC" "../data/$matrix" 1 2>&1)
             else
                 PERF_OUTPUT=$(perf stat -x, -e L1-dcache-loads,L1-dcache-load-misses,LLC-loads,LLC-load-misses \
-                    "$EXEC" "../data/$matrix" "$threads" "$schedule" "$chunk" 2>&1)
+                    "$EXEC" "../data/$matrix" "$threads" "$schedule" "$chunk" 1 2>&1)
             fi
 
             L1_LOADS=$(echo "$PERF_OUTPUT" | grep "L1-dcache-loads" | awk -F',' '{print $1}')
@@ -79,7 +81,7 @@ run_and_record() {
                 LLC_MISS_RATE="N/A"
             fi
 
-            elapsed_time=$(echo "$PERF_OUTPUT" | grep -E "Result_time:" | tail -1 | awk '{print $2}')
+            elapsed_time=$(echo "$PERF_OUTPUT" | grep -E "Result_time:" | awk '{print $2}')
 
             if [ -z "$elapsed_time" ]; then
                 elapsed_time="ERROR"
@@ -89,23 +91,31 @@ run_and_record() {
             echo "${matrix},${mode},${opt},${schedule},${chunk},${threads},${r},${elapsed_time},${L1_LOADS},${L1_MISSES},${L1_MISS_RATE},${LLC_LOADS},${LLC_MISSES},${LLC_MISS_RATE}" >> "$OUTPUT_PERF"
             # Terminal perf
             echo "→ ${matrix} | ${mode} ${opt} | sched=${schedule} chunk=${chunk} threads=${threads} | run=${r} | time=${elapsed_time}s | L1miss=${L1_MISSES}/${L1_LOADS} (${L1_MISS_RATE}%) | LLCmiss=${LLC_MISSES}/${LLC_LOADS} (${LLC_MISS_RATE}%)"
+        done
+    else
+        if [ "$mode" = "sequential" ]; then
+            OUTPUT=$("$EXEC" "../data/$matrix" "$REPEATS" 2>&1)
         else
-            if [ "$mode" = "sequential" ]; then
-                elapsed_time=$("$EXEC" "../data/$matrix" 2>&1 | grep "Result_time:" | awk '{print $2}')
-            else
-                elapsed_time=$("$EXEC" "../data/$matrix" "$threads" "$schedule" "$chunk" 2>&1 | grep "Result_time:" | awk '{print $2}')
-            fi
-
+            OUTPUT=$("$EXEC" "../data/$matrix" "$threads" "$schedule" "$chunk" "$REPEATS" 2>&1)
+        fi
+        
+        TIMES=($(echo "$OUTPUT" | grep "Result_time:" | awk '{print $2}'))
+        
+        if [ ${#TIMES[@]} -ne $REPEATS ]; then
+            echo "WARNING: Expected $REPEATS times but got ${#TIMES[@]} for ${matrix}"
+        fi
+        
+        for ((r=1; r<=REPEATS; r++)); do
+            elapsed_time="${TIMES[$((r-1))]}"
+            
             if [ -z "$elapsed_time" ]; then
                 elapsed_time="ERROR"
             fi
-
-            # CSV without perf
+            
             echo "${matrix},${mode},${opt},${schedule},${chunk},${threads},${r},${elapsed_time}" >> "$OUTPUT_TIME"
-            # Terminal
             echo "→ ${matrix} | ${mode} ${opt} | sched=${schedule} chunk=${chunk} threads=${threads} | run=${r} | time=${elapsed_time}s"
-        fi
-    done
+        done
+    fi
 }
 
 # SEQUENTIAL
