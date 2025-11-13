@@ -101,7 +101,7 @@ run_and_record() {
             # CSV perf
             echo "${matrix},${mode},${opt},${schedule},${chunk},${threads},${r},${elapsed_time},${L1_LOADS},${L1_MISSES},${L1_MISS_RATE},${LLC_LOADS},${LLC_MISSES},${LLC_MISS_RATE}" >> "$OUTPUT_PERF"
             # Terminal perf
-            echo "→ ${matrix} | ${mode} ${opt} | sched=${schedule} chunk=${chunk} threads=${threads} | run=${r} | time=${elapsed_time}s | L1miss=${L1_MISSES}/${L1_LOADS} (${L1_MISS_RATE}%) | LLCmiss=${LLC_MISSES}/${LLC_LOADS} (${LLC_MISS_RATE}%)"
+            echo "${matrix} | ${mode} ${opt} | sched=${schedule} chunk=${chunk} threads=${threads} | run=${r} | time=${elapsed_time}s | L1miss=${L1_MISSES}/${L1_LOADS} (${L1_MISS_RATE}%) | LLCmiss=${LLC_MISSES}/${LLC_LOADS} (${LLC_MISS_RATE}%)"
         done
     else
         if [ "$mode" = "sequential" ]; then
@@ -124,7 +124,7 @@ run_and_record() {
             fi
             
             echo "${matrix},${mode},${opt},${schedule},${chunk},${threads},${r},${elapsed_time}" >> "$OUTPUT_TIME"
-            echo "→ ${matrix} | ${mode} ${opt} | sched=${schedule} chunk=${chunk} threads=${threads} | run=${r} | time=${elapsed_time}s"
+            echo "${matrix} | ${mode} ${opt} | sched=${schedule} chunk=${chunk} threads=${threads} | run=${r} | time=${elapsed_time}s"
         done
     fi
 }

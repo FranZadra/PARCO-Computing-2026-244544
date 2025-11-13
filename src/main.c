@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
             repeats = atoi(argv[5]);
 
             setOmpConfig(ompConf);
-            printOmpConfig(ompConf);
+            //printOmpConfig(ompConf);
         }
         #else
         if(argc != 3) {
