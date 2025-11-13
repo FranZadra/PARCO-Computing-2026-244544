@@ -1,0 +1,62 @@
+#!/bin/bash
+
+#PBS -N spmv_perf
+#PBS -o ../results/benchmark_perf.out
+#PBS -e ../results/benchmark_perf.err
+#PBS -q short_cpuQ
+#PBS -l walltime=6:00:00
+#PBS -l select=1:ncpus=64:mem=32gb
+
+# Load modules gcc and perf
+module load gcc91
+module load perf
+
+# working directory
+cd "$PBS_O_WORKDIR" # go to the directory where qsub was run
+
+# Create necessary directories
+mkdir -p ../results
+mkdir -p ../plots
+
+# Display job info
+echo "--------------------------"
+echo "Job ID: $PBS_JOBID"
+echo "Job Name: $PBS_JOBNAME"
+echo "Node: $(hostname)"
+echo "Working Directory: $(pwd)"
+echo "Start time: $(date)"
+echo "--------------------------"
+echo ""
+
+# Verify that necessary directories and files exist
+if [ ! -d "../src" ] || [ ! -d "../include" ] || [ ! -d "../data" ]; then
+    echo "ERROR: src or include or data directory not found"
+    exit 1
+fi
+
+if [ ! -f "testsBash.sh" ]; then
+    echo "ERROR: testsBash.sh not found"
+    exit 1
+fi
+
+# Just to make sure that testsBash.sh is executable
+chmod +x testsBash.sh
+
+# Running the benchmark script
+echo "Starting perf benchmark execution..."
+bash testsBash.sh perf
+
+exit_code=$?
+
+# Job info
+echo ""
+echo "--------------------------"
+if [ $exit_code -eq 0 ]; then
+    echo "Job completed successfully!"
+else
+    echo "Job completed with errors (exit code: $exit_code)"
+fi
+echo "End time: $(date)"
+echo "--------------------------"
+
+exit $exit_code

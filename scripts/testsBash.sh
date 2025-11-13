@@ -13,12 +13,23 @@ REPEATS=10
 OPT_FLAGS=("" "-O1" "-O2" "-O3" "-Ofast")
 
 SCHEDULES=("static" "dynamic" "guided")
-CHUNKSIZES=(1 10 100 1000)
+CHUNKSIZES=(1 10 100 1000 10000)
 THREADS=(1 2 4 8 16 32 64)
 
+USE_PERF_MODE="both"
+if [ $# -ge 1 ]; then
+    USE_PERF_MODE="$1"
+fi
+
+
 # Initialize CSV
-echo "matrix,mode,opt_level,schedule,chunk_size,num_threads,run,elapsed_time" > "$OUTPUT_TIME"
-echo "matrix,mode,opt_level,schedule,chunk_size,num_threads,run,elapsed_time,L1_loads,L1_misses,L1_miss_rate,LLC_loads,LLC_misses,LLC_miss_rate" > "$OUTPUT_PERF"
+if [ "$USE_PERF_MODE" = "time" ] || [ "$USE_PERF_MODE" = "both" ]; then
+    echo "matrix,mode,opt_level,schedule,chunk_size,num_threads,run,elapsed_time" > "$OUTPUT_TIME"
+fi
+
+if [ "$USE_PERF_MODE" = "perf" ] || [ "$USE_PERF_MODE" = "both" ]; then
+    echo "matrix,mode,opt_level,schedule,chunk_size,num_threads,run,elapsed_time,L1_loads,L1_misses,L1_miss_rate,LLC_loads,LLC_misses,LLC_miss_rate" > "$OUTPUT_PERF"
+fi
 
 # Compilation function
 compile_code() {
@@ -123,9 +134,14 @@ echo -e "\n\n>>> Parte SEQUENZIALE...\n\n"
 for matrix in "${MATRICES[@]}"; do
   for opt in "${OPT_FLAGS[@]}"; do
     compile_code "$opt" "no"
-    for perf_mode in no yes; do
-      run_and_record "$matrix" "sequential" "$opt" "none" "none" 1 "$perf_mode"
-    done
+    if [ "$USE_PERF_MODE" = "time" ]; then
+      run_and_record "$matrix" "sequential" "$opt" "none" "none" 1 "no"
+    elif [ "$USE_PERF_MODE" = "perf" ]; then
+      run_and_record "$matrix" "sequential" "$opt" "none" "none" 1 "yes"
+    else
+      run_and_record "$matrix" "sequential" "$opt" "none" "none" 1 "no"
+      run_and_record "$matrix" "sequential" "$opt" "none" "none" 1 "yes"
+    fi
   done
 done
 
@@ -137,14 +153,23 @@ for matrix in "${MATRICES[@]}"; do
   for schedule in "${SCHEDULES[@]}"; do
     for chunk in "${CHUNKSIZES[@]}"; do
       for threads in "${THREADS[@]}"; do
-        for perf_mode in no yes; do
-          run_and_record "$matrix" "parallel" "-O3" "$schedule" "$chunk" "$threads" "$perf_mode"
-        done
+        if [ "$USE_PERF_MODE" = "time" ]; then
+          run_and_record "$matrix" "parallel" "-O3" "$schedule" "$chunk" "$threads" "no"
+        elif [ "$USE_PERF_MODE" = "perf" ]; then
+          run_and_record "$matrix" "parallel" "-O3" "$schedule" "$chunk" "$threads" "yes"
+        else
+          run_and_record "$matrix" "parallel" "-O3" "$schedule" "$chunk" "$threads" "no"
+          run_and_record "$matrix" "parallel" "-O3" "$schedule" "$chunk" "$threads" "yes"
+        fi
       done
     done
   done
 done
 
 echo -e "\nDone testing!"
-echo "Time results saved in: $OUTPUT_TIME"
-echo "Perf results saved in: $OUTPUT_PERF"
+if [ "$USE_PERF_MODE" = "time" ] || [ "$USE_PERF_MODE" = "both" ]; then
+    echo "Time results saved in: $OUTPUT_TIME"
+fi
+if [ "$USE_PERF_MODE" = "perf" ] || [ "$USE_PERF_MODE" = "both" ]; then
+    echo "Perf results saved in: $OUTPUT_PERF"
+fi
