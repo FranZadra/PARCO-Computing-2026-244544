@@ -4,13 +4,21 @@
 SRC_DIR="../src"
 INCLUDE_DIR="../include"
 EXEC="../results/testResult.out"
-MATRICES=("Andrews.mtx" "bcsstk27.mtx" "bcsstk32.mtx" "hood.mtx" "msdoor.mtx")
+DATA_DIR="../data"
+
+MATRICES=($(ls "$DATA_DIR"/*.mtx 2>/dev/null | xargs -n 1 basename))
+if [ ${#MATRICES[@]} -eq 0 ]; then
+    echo "ERROR: No .mtx files found in $DATA_DIR"
+    echo "Please download matrix files and place them in the data directory"
+    exit 1
+fi
+echo "Found ${#MATRICES[@]} matrices: ${MATRICES[@]}"
+
 OUTPUT_TIME="../results/benchResults.csv"
 OUTPUT_PERF="../results/benchResults_perf.csv"
 
 CC="gcc"
 REPEATS=10
-OPT_FLAGS=("" "-O1" "-O2" "-O3" "-Ofast")
 
 SCHEDULES=("static" "dynamic" "guided")
 CHUNKSIZES=(1 10 100 1000 10000)
@@ -131,18 +139,17 @@ run_and_record() {
 
 # SEQUENTIAL
 echo -e "\n\n>>> Parte SEQUENZIALE...\n\n"
+compile_code "-O3" "no"
+
 for matrix in "${MATRICES[@]}"; do
-  for opt in "${OPT_FLAGS[@]}"; do
-    compile_code "$opt" "no"
     if [ "$USE_PERF_MODE" = "time" ]; then
-      run_and_record "$matrix" "sequential" "$opt" "none" "none" 1 "no"
+      run_and_record "$matrix" "sequential" "-O3" "none" "none" 1 "no"
     elif [ "$USE_PERF_MODE" = "perf" ]; then
-      run_and_record "$matrix" "sequential" "$opt" "none" "none" 1 "yes"
+      run_and_record "$matrix" "sequential" "-O3" "none" "none" 1 "yes"
     else
-      run_and_record "$matrix" "sequential" "$opt" "none" "none" 1 "no"
-      run_and_record "$matrix" "sequential" "$opt" "none" "none" 1 "yes"
+      run_and_record "$matrix" "sequential" "-O3" "none" "none" 1 "no"
+      run_and_record "$matrix" "sequential" "-O3" "none" "none" 1 "yes"
     fi
-  done
 done
 
 # PARALLEL

@@ -3,3 +3,6 @@
 
 # VS Code settings
 .vscode/
+
+# matrix files
+data/*.mtx
