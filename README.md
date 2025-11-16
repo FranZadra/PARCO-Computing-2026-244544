@@ -1,3 +1,181 @@
-PARCO-Computing-2026-244544
+# PARCO-Computing-2026-244544
+## Deliverable 1: Sparse Matrix-Vector Multiplication (SPVM): sequential vs parallel
 
--- DELIVERABLE 1 -- SpMV multiplication
+This repository contains the source files (written in C programming language), the scripts used to run the tests, and the results (saved in CSV format) that were used to analyze and describe the differences between sequential and parallel approaches to sparse matrix-vector multiplication problems.
+
+This file contains all the information necessary to understand the structure of the repository and to reproduce the results obtained by simply following the instructions.
+
+## Repository Structure
+The repository is organized as follows:
+
+```
+repo/
+├── README.md                 # Instructions to build, run, and reproduce the experiments
+│
+├── data/                     # Sparse matrix input files (.mtx format)
+│   └── *.mtx
+│
+├── src/                      # C source code
+│   ├── main.c                  # Program entrypoint: handles setup and calls SPMV routines
+│   ├── mmio.c                  # Matrix Market I/O utilities for sparse matrices
+│   ├── ompconfig.c             # OpenMP configuration (threads, scheduling, chunk sizes)
+│   └── utils.c                 # Useful functions
+│
+├── include/                  # Header files
+│   ├── mmio.h
+│   ├── ompconfig.h
+│   ├── timer.h
+│   └── utils.h
+│
+├── scripts/                  # Automation scripts for experiments and analysis
+│   ├── testsBash.sh            # Bash script with all compile/run configurations
+│   ├── job_perf.pbs            # PBS job script (with perf analysis)
+│   ├── job_time_noperf.pbs     # PBS job script (no perf)
+│   └── calc_percentiles.py     # Computes 90th percentile from the test results (CSV files)
+│
+├── results/                  # Benchmark outputs and generated CSV files
+│   ├── benchResults.csv        # benchmark results saved in CSV format
+│   ├── benchResults_perf.csv   # perf benchmark results saved in CSV format
+│   ├── benchmark_perf.err      # output error console for perf benchmarking
+│   ├── benchmark_perf.out      # output console for perf benchmarking
+│   ├── benchmark_time.err      # output error console for time benchmarking
+│   ├── benchmark_time.out      # output console for time benchmarking
+│   └── testResult.out          # raw output
+│
+└── plots/                    # Figures used in the report
+    └── *
+
+```
+
+## Overview
+
+This deliverable project compares the performance of sparse matrix-vector multiplication with two different implementations:
+- **Sequential**: Single-threaded
+- **Parallel**: Using OpenMP (with different schedule types, number of threads and chunk sizes)
+
+The comparison focuses on execution time and efficiency across different matrix sizes and different OpenMP configurations
+
+---
+
+## 1. Setup
+
+### Download Test Matrices
+
+The benchmark requires matrix files in Matrix Market format (`.mtx`).
+I downloaded the matrices from the following website: [SuiteSparse Matrix Collection](https://sparse.tamu.edu)
+
+For the benchmarking phase I selected matrices of different sizes.
+The selected matrices are listed below:
+ - bcsstk27.mtx (28675 non-zero elements)
+ - Andrews.mtx (410077 non-zero elements)
+ - tmt_sym.mtx (2.9M non-zero elements)
+ - msdoor.mtx (10.3M non-zero elements)
+ - Hook_1498.mtx (31.2M non-zero elements)
+
+The selected matrices, that can be read by the mmio.c source file, are saved in COO format and have the following pattern:
+ - Pattern Symmetry: 100%
+ - Numeric Symmetry: 100%
+ - Cholesky Candidate: yes
+ - Positive Definite: yes
+
+To test the code, just download matrices with the described pattern and add them to the `data/` directory, the bash script will automatically read your matrices from there.
+To verify the presence of matrices in the data directory, run the following bash line:
+```bash
+ls data/*.mtx  # list matrix files
+```
+
+Matrix files are excluded from git due to size.
+
+## 2. Running Benchmarks
+
+### 1. Local Execution
+To run the code in your PC, make sure to have the following modules loaded:
+ - GCC 91
+ - perf performance analysis tool
+
+Then, you can run the bash file that performs all the tests and save the results in CSV files.
+On your terminal, on the project repository, run the following commands:
+
+```bash
+cd scripts
+
+# Run both time and perf benchmarks
+./testsBash.sh
+
+# Run only timing benchmarks (faster)
+./testsBash.sh time
+
+# Run only perf benchmarks (slower, requires perf tool)
+./testsBash.sh perf
+```
+
+### 2. Cluster execution (PBS Queue Submission)
+To run the code on the university cluster, run the following commands on the project repository:
+
+```bash
+cd scripts
+
+# Submit timing job
+qsub job_time.pbs
+
+# Submit perf job  
+qsub job_perf.pbs
+
+# Check job status
+qstat -u $USER
+```
+The type of queue, walltime, nCPUs, memory allocation and modules are written in the pbs files.
+To modify those parameters, just open and edit the two pbs files.
+
+For the benchmarks, I used the following PBS settings (perf job in this case):
+```
+#PBS -N spmv_perf
+#PBS -o ../results/benchmark_perf.out
+#PBS -e ../results/benchmark_perf.err
+#PBS -q short_cpuQ
+#PBS -l walltime=6:00:00
+#PBS -l select=1:ncpus=64:mem=32gb
+```
+
+## 3. Benchmark Configuration
+
+The bash script automatically tests all `.mtx` files in the `data/` directory with:
+
+- **Sequential**: Single-threaded execution with `-O3` optimization
+- **Parallel**: OpenMP parallelization with:
+  - Threads: 1, 2, 4, 8, 16, 32, 64
+  - Schedules: static, dynamic, guided
+  - Chunk sizes: 1, 10, 100, 1000, 10000
+  - 10 repetitions per configuration
+
+To modify these parameters, edit `scripts/testsBash.sh`:
+```bash
+SCHEDULES=("static" "dynamic" "guided")
+CHUNKSIZES=(1 10 100 1000 10000)
+THREADS=(1 2 4 8 16 32 64)
+REPEATS=10
+```
+
+## 4. Output
+The bash script will produce two CSV files (one with perf measurements and one without) containing the results of all the tests.
+Results are saved in `results/` directory:
+- `benchResults.csv` - Timing data
+- `benchResults_perf.csv` - Performance counters (cache misses, etc.)
+- `benchmark_time.out` and `benchmark_time.err`- Timing job log
+- `benchmark_perf.out` and `benchmark_perf.err`- Perf job log
+
+## 5. Plotting
+The raw CSV output files generated during the benchmarking phase contain detailed execution data for each test configuration. 
+These raw results can be further processed to perform data anlysis.
+
+In particular, I processed the files in the following ways:
+ - Data reduction:
+    I calculated, with a python script (`calc_percentile.py`), the 90th percentile of execution times, which provides a more robust indicator of performance by reducing the impact of outliers.
+    The output of the python script is saved in two more condensed CSV files, saved in the `plots/` directory.
+ - Visualization:
+    The processed data can then be used to generate plots and comparative charts, allowing a clearer interpretation of the performance differences between sequential and parallel implementations, as well as between different matrix sizes and configurations.
+
+
+## Authors
+
+Francesco Zadra
