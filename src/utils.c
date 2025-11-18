@@ -6,15 +6,16 @@
 
 
 void spVM(SparseMatrix* matrix, double* rvec, double *res) {
-    int i,j;
+    int i, j;
     #ifdef _OPENMP
-        #pragma omp parallel for schedule(runtime)
+        #pragma omp parallel for schedule(runtime) private(i,j)
     #endif
     for (i = 0; i < matrix->rows; ++i) {
-        res[i] = 0;
+        double sum = 0.0;
         for (j = matrix->row_ptr[i]; j < matrix->row_ptr[i+1]; ++j) {
-            res[i] += matrix->vals[j] * rvec[matrix->col_ind[j]];
+            sum += matrix->vals[j] * rvec[matrix->col_ind[j]];
         }
+        res[i] = sum;
     }
 }
 

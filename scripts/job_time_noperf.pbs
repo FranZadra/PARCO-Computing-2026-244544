@@ -27,6 +27,43 @@ echo "Start time: $(date)"
 echo "--------------------------"
 echo ""
 
+# Save CPU specifications
+echo "Saving CPU specs to file..."
+CPU_INFO_FILE="../results/cpu_info_${PBS_JOBNAME}.txt"
+
+{
+    echo "--------------------------"
+    echo "CPU SPECS"
+    echo "--------------------------"
+    echo ""
+    echo "Node: $(hostname)"
+    echo "Date: $(date)"
+    echo "Job ID: $PBS_JOBID"
+    echo ""
+    echo "--- CPU Model ---"
+    lscpu | grep "Model name"
+    echo ""
+    echo "--- Architecture Details ---"
+    lscpu | grep -E "Architecture|CPU\(s\)|Thread|Core|Socket|NUMA"
+    echo ""
+    echo "--- CPU Frequencies ---"
+    lscpu | grep -E "MHz|max|min"
+    echo ""
+    echo "--- Cache Information ---"
+    lscpu | grep -i cache
+    echo ""
+    echo "--- Full lscpu Output ---"
+    lscpu
+    echo ""
+    echo "--- /proc/cpuinfo (first processor) ---"
+    head -n 30 /proc/cpuinfo
+    echo ""
+    echo "=========================================="
+} > "$CPU_INFO_FILE"
+
+echo "CPU info saved to: $CPU_INFO_FILE"
+echo ""
+
 # Verify that necessary directories and files exist
 if [ ! -d "../src" ] || [ ! -d "../include" ] || [ ! -d "../data" ]; then
     echo "ERROR: src or include or data directory not found"

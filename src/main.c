@@ -58,22 +58,22 @@ int main(int argc, char *argv[])
     
     COOtoCSR(&matrix);
 
-        double* rvec = (double*)malloc(matrix.cols * sizeof(double));
-        double* res = (double*)malloc(matrix.rows*sizeof(double));
-        rvec = randVect(rvec, matrix.cols);
+    double* rvec = (double*)malloc(matrix.cols * sizeof(double));
+    double* res = (double*)malloc(matrix.rows*sizeof(double));
+    rvec = randVect(rvec, matrix.cols);
 
-        for(i = 0; i < repeats; i++) {
-            GET_TIME(start)
-            spVM(&matrix, rvec, res);
-            GET_TIME(finish)
-            elapsed = finish - start;
-            printf("Result_time: %f\n", elapsed);
-        }
+    for(i = 0; i < repeats; i++) {
+        GET_TIME(start)
+        spVM(&matrix, rvec, res);
+        GET_TIME(finish)
+        elapsed = finish - start;
+        printf("Result_time: %f\n", elapsed * 1000.0);
+    }
         
     
-        freeSparseMatrix(&matrix);
-        free(rvec);
-        free(res);
+    freeSparseMatrix(&matrix);
+    free(rvec);
+    free(res);
 
 	return 0;
 }
