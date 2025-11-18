@@ -21,7 +21,6 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Usage: %s <matrix_market_file>\n", argv[0]);
         exit(EXIT_FAILURE);
     } else {
-        //set the compiler flags
         #ifdef _OPENMP
         if(argc != 6) {
             fprintf(stderr, "Usage with OpenMP: %s <matrix_market_file> <num_threads> <schedule_type> <chunk_size> <repeats>\n", argv[0]);
@@ -60,11 +59,12 @@ int main(int argc, char *argv[])
     COOtoCSR(&matrix);
 
         double* rvec = (double*)malloc(matrix.cols * sizeof(double));
+        double* res = (double*)malloc(matrix.rows*sizeof(double));
         rvec = randVect(rvec, matrix.cols);
 
         for(i = 0; i < repeats; i++) {
             GET_TIME(start)
-            spVM(&matrix, rvec);
+            spVM(&matrix, rvec, res);
             GET_TIME(finish)
             elapsed = finish - start;
             printf("Result_time: %f\n", elapsed);
@@ -73,6 +73,7 @@ int main(int argc, char *argv[])
     
         freeSparseMatrix(&matrix);
         free(rvec);
+        free(res);
 
 	return 0;
 }

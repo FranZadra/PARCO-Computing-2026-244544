@@ -4,10 +4,9 @@
 #include "utils.h"
 #include "mmio.h"
 
-int i,j;
 
-void spVM(SparseMatrix* matrix, double* rvec) {
-    double* res = (double*)malloc(matrix->rows*sizeof(double));
+void spVM(SparseMatrix* matrix, double* rvec, double *res) {
+    int i,j;
     #ifdef _OPENMP
         #pragma omp parallel for schedule(runtime)
     #endif
@@ -17,7 +16,6 @@ void spVM(SparseMatrix* matrix, double* rvec) {
             res[i] += matrix->vals[j] * rvec[matrix->col_ind[j]];
         }
     }
-    free(res);
 }
 
 int loadMatrixMarket(const char *filename, SparseMatrix* matrix)
@@ -80,6 +78,7 @@ int loadMatrixMarket(const char *filename, SparseMatrix* matrix)
 }
 
 void printVectorInt(char* name, int *v, int size) {
+    int i;
     printf("%s[", name);
     for (i = 0; i < size; i++) {
         printf(" %d ", v[i]);
@@ -88,6 +87,7 @@ void printVectorInt(char* name, int *v, int size) {
 }
 
 void printVectorDouble(char* name, double *v, int size) {
+    int i;
     printf("%s[", name);
     for (i = 0; i < size; i++) {
         printf(" %f ", v[i]);
@@ -110,6 +110,7 @@ void printCSR(SparseMatrix* matrix) {
 }
 
 void sortCSRRows(SparseMatrix* matrix) {
+    int i, j;
     for (i = 0; i < matrix->rows; i++) {
         int start = matrix->row_ptr[i];
         int end = matrix->row_ptr[i+1];
@@ -132,6 +133,7 @@ void sortCSRRows(SparseMatrix* matrix) {
 
 void COOtoCSR(SparseMatrix* matrix) {
     //printf("\nConverting the matrix from COO to CSR format...\n");
+    int i;
         for (i = 0; i <= matrix->rows; i++) {
             matrix->row_ptr[i] = 0;
         }
@@ -167,6 +169,7 @@ void COOtoCSR(SparseMatrix* matrix) {
 }
 
 double* randVect(double* rvec, int COLS){
+    int i;
     for (i = 0; i < COLS; i++) {
         rvec[i] = ((double)rand() / RAND_MAX) * 8.0 - 4.0;
     }

@@ -17,7 +17,7 @@ typedef struct {
     double *vals;
 } SparseMatrix;
 
-void spVM(SparseMatrix* matrix, double* rvec);
+void spVM(SparseMatrix* matrix, double* rvec, double *res);
 int loadMatrixMarket(const char *filename, SparseMatrix* matrix);
 void printVectorInt(char* name, int* v, int size);
 void printVectorDouble(char* name, double* v, int size);
