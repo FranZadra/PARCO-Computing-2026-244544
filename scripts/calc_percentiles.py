@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 
-csv_noperf = pd.read_csv('plots/benchResults.csv')
-csv_perf = pd.read_csv('plots/benchResults_perf.csv')
+csv_noperf = pd.read_csv('results/benchResults.csv')
+csv_perf = pd.read_csv('results/benchResults_perf.csv')
 
 # 90th percentile for non-perf results
 percentile_time = csv_noperf.groupby(
@@ -17,9 +17,12 @@ percentile_perf = csv_perf.groupby(
     sort=False
 ).agg({
     'elapsed_time': lambda x: x.quantile(0.90),
-    'L1_miss_rate': 'mean', 
-    'LLC_miss_rate': 'mean'
+    'L1_miss_rate': lambda x: x.quantile(0.90),
+    'LLC_miss_rate': lambda x: x.quantile(0.90),
 }).reset_index()
+
+percentile_time = percentile_time.round(5)
+percentile_perf = percentile_perf.round(5)
 
 percentile_time.to_csv('plots/benchResults_p90.csv', index=False)
 percentile_perf.to_csv('plots/benchResults_perf_p90.csv', index=False)

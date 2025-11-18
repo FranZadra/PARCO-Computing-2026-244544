@@ -176,6 +176,7 @@ In particular, I processed the files in the following ways:
     The processed data can then be used to generate plots and comparative charts, allowing a clearer interpretation of the performance differences between sequential and parallel implementations, as well as between different matrix sizes and configurations.
 
 
-## Authors
+## Author
 
 Francesco Zadra
+mat. 244544
