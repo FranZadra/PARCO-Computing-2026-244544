@@ -31,7 +31,7 @@ repo/
 │   ├── testsBash.sh            # Bash script with all compile/run configurations
 │   ├── job_perf.pbs            # PBS job script (with perf analysis)
 │   ├── job_time_noperf.pbs     # PBS job script (no perf)
-│   └── calc_percentiles.py     # Computes 90th percentile from the test results (CSV files)
+│   └── plottingData.py         # Computes data plotting from the test results (CSV files)
 │
 ├── results/                  # Benchmark outputs and generated CSV files
 │   ├── benchResults.csv        # benchmark results saved in CSV format
@@ -42,7 +42,7 @@ repo/
 │   ├── benchmark_time.out      # output console for time benchmarking
 │   └── testResult.out          # raw output
 │
-└── plots/                    # Figures used in the report
+└── plots/                    # Figures and files used in data analysis
     └── *
 
 ```
@@ -170,10 +170,12 @@ These raw results can be further processed to perform data anlysis.
 
 In particular, I processed the files in the following ways:
  - Data reduction:
-    I calculated, with a python script (`calc_percentile.py`), the 90th percentile of execution times, which provides a more robust indicator of performance by reducing the impact of outliers.
-    The output of the python script is saved in two more condensed CSV files, saved in the `plots/` directory.
+    I calculated, with a python script, the 90th percentile of execution times, which provides a more robust indicator of performance by reducing the impact of outliers.
+    After that, I selected the best chunk size for every couple schedule_type - num_threads, and saved the results in a different file.
+    The output of the python script is saved in more condensed CSV files, saved in the `plots/` directory.
  - Visualization:
     The processed data can then be used to generate plots and comparative charts, allowing a clearer interpretation of the performance differences between sequential and parallel implementations, as well as between different matrix sizes and configurations.
+    The comparative charts are generated and saved in .png format in the `plots/` directory.
 
 
 ## Author
