@@ -40,9 +40,11 @@ repo/
 │   ├── benchmark_perf.out      # output console for perf benchmarking
 │   ├── benchmark_time.err      # output error console for time benchmarking
 │   ├── benchmark_time.out      # output console for time benchmarking
+│   ├── cpu_info_spmv_noperf    # CPU and memory info of the node in which the job is executed (without perf)
+│   ├── cpu_info_spmv_perf      # CPU and memory info of the node in which the job is executed (with perf)
 │   └── testResult.out          # raw output
 │
-└── plots/                    # Figures and files used in data analysis
+└── plots/                    # Plots, graphs and files used for data analysis
     └── *
 
 ```
@@ -66,11 +68,11 @@ I downloaded the matrices from the following website: [SuiteSparse Matrix Collec
 
 For the benchmarking phase I selected matrices of different sizes.
 The selected matrices are listed below:
- - bcsstk27.mtx (28675 non-zero elements)
- - Andrews.mtx (410077 non-zero elements)
- - tmt_sym.mtx (2.9M non-zero elements)
- - msdoor.mtx (10.3M non-zero elements)
- - Hook_1498.mtx (31.2M non-zero elements)
+ - bcsstk27.mtx (28675 non-zero elements) [bcsstk27 matrix](https://sparse.tamu.edu/HB/bcsstk27)
+ - Andrews.mtx (410077 non-zero elements) [Andrews matrix](https://sparse.tamu.edu/Andrews/Andrews)
+ - tmt_sym.mtx (2.9M non-zero elements) [tmt_sym matrix](https://sparse.tamu.edu/CEMW/tmt_sym)
+ - msdoor.mtx (10.3M non-zero elements) [msdoor matrix](https://sparse.tamu.edu/INPRO/msdoor)
+ - Hook_1498.mtx (31.2M non-zero elements) [Hook_1498 matrix](https://sparse.tamu.edu/Janna/Hook_1498)
 
 The selected matrices, that can be read by the mmio.c source file, are saved in COO format and have the following pattern:
  - Pattern Symmetry: 100%
@@ -177,6 +179,20 @@ In particular, I processed the files in the following ways:
     The processed data can then be used to generate plots and comparative charts, allowing a clearer interpretation of the performance differences between sequential and parallel implementations, as well as between different matrix sizes and configurations.
     The comparative charts are generated and saved in .png format in the `plots/` directory.
 
+To run the python script, in the Deliverable directory, run the following script:
+```bash
+python3 scripts/plottingData.py
+```
+NB: to run the python script, make sure to have the following libraries installed:
+```bash
+pandas
+numpy
+matplotlib
+```
+To install the libraries, on your terminal, run the following script:
+```bash
+python3 -m pip install --user numpy pandas matplotlib
+```
 
 ## Author
 
