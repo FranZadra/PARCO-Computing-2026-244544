@@ -195,8 +195,10 @@ python3 -m pip install --user numpy pandas matplotlib
 ```
 
 
-
+##
 ## Author
 
-Francesco Zadra   
-mat. 244544
+Francesco Zadra  
+mat: 244544  
+UNITN ICE student   
+mail: francesco.zadra-1@studenti.unitn.it
