@@ -63,7 +63,7 @@ The comparison focuses on execution time and efficiency across different matrix 
 
 ### Download Test Matrices
 
-The benchmark requires matrix files in Matrix Market format (`.mtx`).
+The benchmark requires matrix files in Matrix Market format (`.mtx`).  
 I downloaded the matrices from the following website: [SuiteSparse Matrix Collection](https://sparse.tamu.edu)
 
 For the benchmarking phase I selected matrices of different sizes.
@@ -80,7 +80,7 @@ The selected matrices, that can be read by the mmio.c source file, are saved in 
  - Cholesky Candidate: yes
  - Positive Definite: yes
 
-To test the code, just download matrices with the described pattern and add them to the `data/` directory, the bash script will automatically read your matrices from there.
+To test the code, just download matrices with the described pattern and add them to the `data/` directory, the bash script will automatically read your matrices from there.  
 To verify the presence of matrices in the data directory, run the following bash line:
 ```bash
 ls data/*.mtx  # list matrix files
@@ -95,7 +95,7 @@ To run the code in your PC, make sure to have the following modules loaded:
  - GCC 91
  - perf performance analysis tool
 
-Then, you can run the bash file that performs all the tests and save the results in CSV files.
+Then, you can run the bash file that performs all the tests and stores the results in CSV files.  
 On your terminal, on the project repository, run the following commands:
 
 ```bash
@@ -112,7 +112,7 @@ cd scripts
 ```
 
 ### 2. Cluster execution (PBS Queue Submission)
-To run the code on the university cluster, run the following commands on the project repository:
+To run the code on the university cluster, run the following commands on the `scripts/` subfolder:
 
 ```bash
 cd scripts
@@ -126,7 +126,7 @@ qsub job_perf.pbs
 # Check job status
 qstat -u $USER
 ```
-The type of queue, walltime, nCPUs, memory allocation and modules are written in the pbs files.
+The type of queue, walltime, nCPUs, memory allocation and modules are written in the pbs files.  
 To modify those parameters, just open and edit the two pbs files.
 
 For the benchmarks, I used the following PBS settings (perf job in this case):
@@ -159,7 +159,7 @@ REPEATS=10
 ```
 
 ## 4. Output
-The bash script will produce two CSV files (one with perf measurements and one without) containing the results of all the tests.
+The bash scripts will produce two CSV files (one with perf measurements and one without) containing the results of all the tests.
 Results are saved in `results/` directory:
 - `benchResults.csv` - Timing data
 - `benchResults_perf.csv` - Performance counters (cache misses, etc.)
@@ -171,15 +171,15 @@ The raw CSV output files generated during the benchmarking phase contain detaile
 These raw results can be further processed to perform data anlysis.
 
 In particular, I processed the files in the following ways:
- - Data reduction:
+ - *Data reduction*:
     I calculated, with a python script, the 90th percentile of execution times, which provides a more robust indicator of performance by reducing the impact of outliers.
     After that, I selected the best chunk size for every couple schedule_type - num_threads, and saved the results in a different file.
     The output of the python script is saved in more condensed CSV files, saved in the `plots/` directory.
- - Visualization:
+ - *Visualization*:
     The processed data can then be used to generate plots and comparative charts, allowing a clearer interpretation of the performance differences between sequential and parallel implementations, as well as between different matrix sizes and configurations.
     The comparative charts are generated and saved in .png format in the `plots/` directory.
 
-To run the python script, in the Deliverable directory, run the following script:
+To run the python script, in the repo directory, run the following script:
 ```bash
 python3 scripts/plottingData.py
 ```
@@ -194,7 +194,9 @@ To install the libraries, on your terminal, run the following script:
 python3 -m pip install --user numpy pandas matplotlib
 ```
 
+
+
 ## Author
 
-Francesco Zadra
+Francesco Zadra   
 mat. 244544
