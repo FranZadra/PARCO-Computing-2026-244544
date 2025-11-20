@@ -141,6 +141,23 @@ For the benchmarks, I used the following PBS settings (perf job in this case):
 
 ## 3. Benchmark Configuration
 
+### Compilation info
+ The bash will compile the code with the following commands:  
+```bash
+# sequential
+gcc -g -Wall $flags -I"$INCLUDE_DIR" "$SRC_DIR"/*.c -o "$EXEC"
+# parallel
+gcc -g -Wall $flags -fopenmp -I"$INCLUDE_DIR" "$SRC_DIR"/*.c -o "$EXEC"
+```
+
+Where:
+- `$flags` is the optimization level (in this case `-O3`)
+- `$INCLUDE_DIR`is the headers' folder
+- `$SRC_DIR` is the C source file folder
+- `$EXEC` is the output file
+- `-fopenmp` is the flag to compile the code with OpenMP
+
+
 The bash script automatically tests all `.mtx` files in the `data/` directory with:
 
 - **Sequential**: Single-threaded execution with `-O3` optimization
@@ -157,22 +174,6 @@ CHUNKSIZES=(1 10 100 1000 10000)
 THREADS=(1 2 4 8 16 32 64)
 REPEATS=10
 ```
-
-### Compilation info
- The bash will compile the code with the following commands:  
-```bash
-# sequential
-gcc -g -Wall $flags -I"$INCLUDE_DIR" "$SRC_DIR"/*.c -o "$EXEC"
-# parallel
-gcc -g -Wall $flags -fopenmp -I"$INCLUDE_DIR" "$SRC_DIR"/*.c -o "$EXEC"
-```
-
-Where:
-- `$flags` is the optimization level (in this case `-O3`)
-- `$INCLUDE_DIR`is the headers' folder
-- `$SRC_DIR` is the C source file folder
-- `$EXEC` is the output file
-- `-fopenmp` is the flag to compile the code with OpenMP
 
 ## 4. Output
 The bash scripts will produce two CSV files (one with perf measurements and one without) containing the results of all the tests.
