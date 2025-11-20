@@ -139,9 +139,9 @@ For the benchmarks, I used the following PBS settings (perf job in this case):
 #PBS -l select=1:ncpus=64:mem=32gb
 ```
 
-## 3. Benchmark Configuration
+## 3. Experimental Setup
 
-### Compilation info
+### 3.1 Compilation info
  The bash will compile the code with the following commands:  
 ```bash
 # sequential
@@ -152,12 +152,12 @@ gcc -g -Wall $flags -fopenmp -I"$INCLUDE_DIR" "$SRC_DIR"/*.c -o "$EXEC"
 
 Where:
 - `$flags` is the optimization level (in this case `-O3`)
-- `$INCLUDE_DIR`is the headers' folder
+- `$INCLUDE_DIR`is the `.h` header folder
 - `$SRC_DIR` is the C source file folder
 - `$EXEC` is the output file
 - `-fopenmp` is the flag to compile the code with OpenMP
 
-
+### 3.2 Bash scripts info
 The bash script automatically tests all `.mtx` files in the `data/` directory with:
 
 - **Sequential**: Single-threaded execution with `-O3` optimization
@@ -189,11 +189,11 @@ These raw results can be further processed to perform data anlysis.
 
 In particular, I processed the files in the following ways:
  - *Data reduction*:
-    I calculated, with a python script, the 90th percentile of execution times, which provides a more robust indicator of performance by reducing the impact of outliers.
+    I calculated, with a python script, the 90th percentile of execution times, which provides a more robust indicator of performance by reducing the impact of outliers.  
     After that, I selected the best chunk size for every couple schedule_type - num_threads, and saved the results in a different file.
     The output of the python script is saved in more condensed CSV files, saved in the `plots/` directory.
  - *Visualization*:
-    The processed data can then be used to generate plots and comparative charts, allowing a clearer interpretation of the performance differences between sequential and parallel implementations, as well as between different matrix sizes and configurations.
+    The processed data can then be used to generate plots and comparative charts, allowing a clearer interpretation of the performance differences between sequential and parallel implementations, as well as between different matrix sizes and configurations.  
     The comparative charts are generated and saved in .png format in the `plots/` directory.
 
 To run the python script, in the repo directory, run the following script:
