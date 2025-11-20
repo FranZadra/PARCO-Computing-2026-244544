@@ -327,52 +327,102 @@ if best_configs:
         plt.close()
         print("\nCache miss comparison plot saved: plots/cache_miss_comparison.png")
         
-        # 2. Scatter plot: Speedup vs Cache Miss Increase
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+        fig, ax = plt.subplots(figsize=(16, 8))
         
-        # Speedup vs L1 miss increase
-        ax1.scatter(cache_df['L1_miss_increase'], cache_df['speedup'], 
-                   s=200, alpha=0.6, c=range(len(cache_df)), cmap='viridis', edgecolors='black', linewidth=1.5)
-        for i, row in cache_df.iterrows():
-            ax1.annotate(row['matrix'], 
-                        (row['L1_miss_increase'], row['speedup']),
-                        xytext=(5, 5), textcoords='offset points', fontsize=9)
-        ax1.set_xlabel('L1 Miss Rate Increase', fontsize=12, fontweight='bold')
-        ax1.set_ylabel('Speedup', fontsize=12, fontweight='bold')
-        ax1.set_title('Speedup vs L1 Cache Miss Increase', fontsize=14, fontweight='bold')
-        ax1.grid(True, alpha=0.3, linestyle='--')
-        ax1.axhline(y=1, color='red', linestyle='--', alpha=0.5, label='No speedup')
-        ax1.axvline(x=0, color='blue', linestyle='--', alpha=0.5, label='No miss increase')
-        ax1.legend()
+        matrices_list = cache_df['matrix'].tolist()
+        x_pos = np.arange(len(matrices_list))
+        width = 0.25
         
-        # Speedup vs LLC miss increase
-        ax2.scatter(cache_df['LLC_miss_increase'], cache_df['speedup'],
-                   s=200, alpha=0.6, c=range(len(cache_df)), cmap='viridis', edgecolors='black', linewidth=1.5)
-        for i, row in cache_df.iterrows():
-            ax2.annotate(row['matrix'],
-                        (row['LLC_miss_increase'], row['speedup']),
-                        xytext=(5, 5), textcoords='offset points', fontsize=9)
-        ax2.set_xlabel('LLC Miss Rate Increase', fontsize=12, fontweight='bold')
-        ax2.set_ylabel('Speedup', fontsize=12, fontweight='bold')
-        ax2.set_title('Speedup vs LLC Miss Increase', fontsize=14, fontweight='bold')
-        ax2.grid(True, alpha=0.3, linestyle='--')
-        ax2.axhline(y=1, color='red', linestyle='--', alpha=0.5, label='No speedup')
-        ax2.axvline(x=0, color='blue', linestyle='--', alpha=0.5, label='No miss increase')
-        ax2.legend()
+        # Normalizza i valori per renderli comparabili sullo stesso grafico
+        # Speedup rimane invariato
+        speedups = cache_df['speedup'].values
+        
+        # Per i miss, usiamo il ratio (quanto sono aumentati rispetto al sequenziale)
+        l1_ratios = cache_df['L1_miss_ratio'].values
+        llc_ratios = cache_df['LLC_miss_ratio'].values
+        
+        bars1 = ax.bar(x_pos - width, speedups, width, label='Speedup', 
+                      color='#2ca02c', alpha=0.8, edgecolor='black', linewidth=1.5)
+        bars2 = ax.bar(x_pos, l1_ratios, width, label='L1 Miss Ratio (par/seq)',
+                      color='#ff7f0e', alpha=0.8, edgecolor='black', linewidth=1.5)
+        bars3 = ax.bar(x_pos + width, llc_ratios, width, label='LLC Miss Ratio (par/seq)',
+                      color='#d62728', alpha=0.8, edgecolor='black', linewidth=1.5)
+        
+        # Aggiungi i valori sopra le barre
+        for bars in [bars1, bars2, bars3]:
+            for bar in bars:
+                height = bar.get_height()
+                ax.text(bar.get_x() + bar.get_width()/2., height,
+                       f'{height:.2f}',
+                       ha='center', va='bottom', fontsize=9, fontweight='bold')
+        
+        # Linea di riferimento a y=1
+        ax.axhline(y=1, color='black', linestyle='--', linewidth=2, 
+                  label='Baseline (1x)', alpha=0.5)
+        
+        ax.set_xlabel('Matrix', fontsize=12, fontweight='bold')
+        ax.set_ylabel('Ratio (relative to sequential)', fontsize=12, fontweight='bold')
+        ax.set_title('Performance and Cache Behavior: Best Parallel vs Sequential', 
+                    fontsize=14, fontweight='bold')
+        ax.set_xticks(x_pos)
+        ax.set_xticklabels(matrices_list, rotation=45, ha='right', fontsize=10)
+        ax.legend(fontsize=10, loc='upper left')
+        ax.grid(True, alpha=0.3, linestyle='--', axis='y')
         
         plt.tight_layout()
         plt.savefig('plots/speedup_vs_cache_miss.png', dpi=300, bbox_inches='tight')
         plt.close()
         print("Speedup vs cache miss plot saved: plots/speedup_vs_cache_miss.png")
         
-        # 3. Correlation analysis
-        print("\n" + "-"*50)
-        print("Correlation Analysis:")
-        print("\n" + "-"*50)
+        # 3. Grafico a bolle: dimensione = speedup, posizione = cache behavior
+        fig, ax = plt.subplots(figsize=(14, 8))
+        
+        # Usa i ratio per le posizioni
+        x = cache_df['L1_miss_ratio'].values
+        y = cache_df['LLC_miss_ratio'].values
+        sizes = cache_df['speedup'].values * 100  # scala per dimensione bolla
+        
+        scatter = ax.scatter(x, y, s=sizes, alpha=0.6, 
+                           c=cache_df['speedup'].values, cmap='RdYlGn',
+                           edgecolors='black', linewidth=2, vmin=0, vmax=cache_df['speedup'].max())
+        
+        # Aggiungi etichette
+        for i, row in cache_df.iterrows():
+            ax.annotate(f"{row['matrix']}\n({row['speedup']:.1f}x)", 
+                       (row['L1_miss_ratio'], row['LLC_miss_ratio']),
+                       xytext=(0, 0), textcoords='offset points', 
+                       fontsize=9, ha='center', fontweight='bold')
+        
+        # Linee di riferimento
+        ax.axhline(y=1, color='blue', linestyle='--', linewidth=1.5, 
+                  alpha=0.5, label='LLC: no change')
+        ax.axvline(x=1, color='red', linestyle='--', linewidth=1.5,
+                  alpha=0.5, label='L1: no change')
+        
+        ax.set_xlabel('L1 Miss Ratio (parallel/sequential)', fontsize=12, fontweight='bold')
+        ax.set_ylabel('LLC Miss Ratio (parallel/sequential)', fontsize=12, fontweight='bold')
+        ax.set_title('Cache Behavior Analysis (bubble size = speedup)', 
+                    fontsize=14, fontweight='bold')
+        ax.grid(True, alpha=0.3, linestyle='--')
+        ax.legend(fontsize=10, loc='upper left')
+        
+        # Colorbar per lo speedup
+        cbar = plt.colorbar(scatter, ax=ax)
+        cbar.set_label('Speedup', fontsize=11, fontweight='bold')
+        
+        plt.tight_layout()
+        plt.savefig('plots/cache_behavior_bubble.png', dpi=300, bbox_inches='tight')
+        plt.close()
+        print("Cache behavior bubble plot saved: plots/cache_behavior_bubble.png")
+        
+        # 3. Analisi correlazione
+        print("\n" + "="*70)
+        print("CORRELATION ANALYSIS")
+        print("="*70)
         
         from scipy.stats import pearsonr, spearmanr
         
-        # Speedup vs L1 miss increase correlataion
+        # Correlazione Speedup vs L1 miss increase
         if len(cache_df) > 1:
             pearson_l1, p_l1 = pearsonr(cache_df['L1_miss_increase'], cache_df['speedup'])
             spearman_l1, sp_l1 = spearmanr(cache_df['L1_miss_increase'], cache_df['speedup'])
@@ -381,7 +431,7 @@ if best_configs:
             print(f"  Pearson correlation:  {pearson_l1:.3f} (p-value: {p_l1:.4f})")
             print(f"  Spearman correlation: {spearman_l1:.3f} (p-value: {sp_l1:.4f})")
             
-            # Speedup vs LLC miss increase correlation
+            # Correlazione Speedup vs LLC miss increase
             pearson_llc, p_llc = pearsonr(cache_df['LLC_miss_increase'], cache_df['speedup'])
             spearman_llc, sp_llc = spearmanr(cache_df['LLC_miss_increase'], cache_df['speedup'])
             
@@ -389,10 +439,10 @@ if best_configs:
             print(f"  Pearson correlation:  {pearson_llc:.3f} (p-value: {p_llc:.4f})")
             print(f"  Spearman correlation: {spearman_llc:.3f} (p-value: {sp_llc:.4f})")
             
-            # Interpretation
-            print("\n" + "-"*50)
+            # Interpretazione
+            print("\n" + "-"*70)
             print("Interpretation:")
-            print("-"*50)
+            print("-"*70)
             
             if abs(pearson_l1) < 0.3:
                 print("• L1 cache miss increase shows WEAK correlation with speedup")
