@@ -41,7 +41,6 @@ int main(int argc, char *argv[])
             exit(EXIT_FAILURE);
         } 
         repeats = atoi(argv[2]);
-        //printf("OpenMP not enabled. Running in sequential mode.\n");
         #endif
     }
 
@@ -50,7 +49,6 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Failed to load matrix.\n");
         exit(EXIT_FAILURE);
     }
-    //printf("Matrix loaded: %d x %d, non-zeros: %d\n", matrix.rows, matrix.cols, matrix.nz);
 
     matrix.row_ptr = malloc((matrix.rows + 1) * sizeof(int));
     matrix.col_ind = malloc(matrix.nz * sizeof(int));
@@ -61,6 +59,9 @@ int main(int argc, char *argv[])
     double* rvec = (double*)malloc(matrix.cols * sizeof(double));
     double* res = (double*)malloc(matrix.rows*sizeof(double));
     rvec = randVect(rvec, matrix.cols);
+
+    // cache warm-up
+    spVM(&matrix, rvec, res);
 
     for(i = 0; i < repeats; i++) {
         GET_TIME(start)

@@ -133,7 +133,6 @@ void sortCSRRows(SparseMatrix* matrix) {
 }
 
 void COOtoCSR(SparseMatrix* matrix) {
-    //printf("\nConverting the matrix from COO to CSR format...\n");
     int i;
         for (i = 0; i <= matrix->rows; i++) {
             matrix->row_ptr[i] = 0;
@@ -163,10 +162,7 @@ void COOtoCSR(SparseMatrix* matrix) {
         }
         free(current_pos);
 
-        //printf("Sorting columns within each row...\n");
         sortCSRRows(matrix);
-
-        //printf("Job done, ready for SpMV Matrix-Vector multiplication...\n");
 }
 
 double* randVect(double* rvec, int COLS){
