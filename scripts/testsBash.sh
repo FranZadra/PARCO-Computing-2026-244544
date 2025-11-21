@@ -32,11 +32,11 @@ fi
 
 # Initialize CSV
 if [ "$USE_PERF_MODE" = "time" ] || [ "$USE_PERF_MODE" = "both" ]; then
-    echo "matrix,mode,opt_level,schedule,chunk_size,num_threads,run,elapsed_time" > "$OUTPUT_TIME"
+    echo "matrix,mode,opt_level,schedule,chunk_size,num_threads,run,elapsed_time,bandwidth_GB_s,gflops" > "$OUTPUT_TIME"
 fi
 
 if [ "$USE_PERF_MODE" = "perf" ] || [ "$USE_PERF_MODE" = "both" ]; then
-    echo "matrix,mode,opt_level,schedule,chunk_size,num_threads,run,elapsed_time,L1_loads,L1_misses,L1_miss_rate,LLC_loads,LLC_misses,LLC_miss_rate" > "$OUTPUT_PERF"
+    echo "matrix,mode,opt_level,schedule,chunk_size,num_threads,run,elapsed_time,bandwidth_GB_s,gflops,L1_loads,L1_misses,L1_miss_rate,LLC_loads,LLC_misses,LLC_miss_rate" > "$OUTPUT_PERF"
 fi
 
 # Compilation function
@@ -72,7 +72,6 @@ run_and_record() {
 
 
     if [ "$use_perf" = "yes" ]; then
-        # CON PERF: esegui 10 volte l'eseguibile con repeats=1
         for ((r=1; r<=REPEATS; r++)); do
             if [ "$mode" = "sequential" ]; then
                 PERF_OUTPUT=$(perf stat -x, -e L1-dcache-loads,L1-dcache-load-misses,LLC-loads,LLC-load-misses \
@@ -101,15 +100,24 @@ run_and_record() {
             fi
 
             elapsed_time=$(echo "$PERF_OUTPUT" | grep -E "Result_time:" | awk '{print $2}')
+            bandwidth=$(echo "$PERF_OUTPUT" | grep -E "Result_bandwidth:" | awk '{print $2}')
+            gflops=$(echo "$PERF_OUTPUT" | grep -E "Result_gflops:" | awk '{print $2}')
+
 
             if [ -z "$elapsed_time" ]; then
                 elapsed_time="ERROR"
             fi
+            if [ -z "$bandwidth" ]; then
+                bandwidth="ERROR"
+            fi
+            if [ -z "$gflops" ]; then
+                gflops="ERROR"
+            fi
 
             # CSV perf
-            echo "${matrix},${mode},${opt},${schedule},${chunk},${threads},${r},${elapsed_time},${L1_LOADS},${L1_MISSES},${L1_MISS_RATE},${LLC_LOADS},${LLC_MISSES},${LLC_MISS_RATE}" >> "$OUTPUT_PERF"
+            echo "${matrix},${mode},${opt},${schedule},${chunk},${threads},${r},${elapsed_time},${bandwidth},${gflops},${L1_LOADS},${L1_MISSES},${L1_MISS_RATE},${LLC_LOADS},${LLC_MISSES},${LLC_MISS_RATE}" >> "$OUTPUT_PERF"
             # Terminal perf
-            echo "${matrix} | ${mode} ${opt} | sched=${schedule} chunk=${chunk} threads=${threads} | run=${r} | time=${elapsed_time}s | L1miss=${L1_MISSES}/${L1_LOADS} (${L1_MISS_RATE}%) | LLCmiss=${LLC_MISSES}/${LLC_LOADS} (${LLC_MISS_RATE}%)"
+            echo "${matrix} | ${mode} ${opt} | sched=${schedule} chunk=${chunk} threads=${threads} | run=${r} | time=${elapsed_time}s | BW=${bandwidth} GB/s | ${gflops} GFLOPS | L1miss=${L1_MISSES}/${L1_LOADS} (${L1_MISS_RATE}%) | LLCmiss=${LLC_MISSES}/${LLC_LOADS} (${LLC_MISS_RATE}%)"
         done
     else
         if [ "$mode" = "sequential" ]; then
@@ -119,6 +127,8 @@ run_and_record() {
         fi
         
         TIMES=($(echo "$OUTPUT" | grep "Result_time:" | awk '{print $2}'))
+        BANDWIDTHS=($(echo "$OUTPUT" | grep "Result_bandwidth:" | awk '{print $2}'))
+        GFLOPS=($(echo "$OUTPUT" | grep "Result_gflops:" | awk '{print $2}'))
         
         if [ ${#TIMES[@]} -ne $REPEATS ]; then
             echo "WARNING: Expected $REPEATS times but got ${#TIMES[@]} for ${matrix}"
@@ -126,13 +136,21 @@ run_and_record() {
         
         for ((r=1; r<=REPEATS; r++)); do
             elapsed_time="${TIMES[$((r-1))]}"
+            bandwidth="${BANDWIDTHS[$((r-1))]}"
+            gflops="${GFLOPS[$((r-1))]}"
             
             if [ -z "$elapsed_time" ]; then
                 elapsed_time="ERROR"
             fi
+            if [ -z "$bandwidth" ]; then
+                bandwidth="ERROR"
+            fi
+            if [ -z "$gflops" ]; then
+                gflops="ERROR"
+            fi
             
-            echo "${matrix},${mode},${opt},${schedule},${chunk},${threads},${r},${elapsed_time}" >> "$OUTPUT_TIME"
-            echo "${matrix} | ${mode} ${opt} | sched=${schedule} chunk=${chunk} threads=${threads} | run=${r} | time=${elapsed_time}s"
+            echo "${matrix},${mode},${opt},${schedule},${chunk},${threads},${r},${elapsed_time},${bandwidth},${gflops}" >> "$OUTPUT_TIME"
+            echo "${matrix} | ${mode} ${opt} | sched=${schedule} chunk=${chunk} threads=${threads} | run=${r} | time=${elapsed_time}s | BW=${bandwidth} GB/s | ${gflops} GFLOPS"
         done
     fi
 }

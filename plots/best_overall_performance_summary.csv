@@ -1,0 +1,6 @@
+matrix,schedule,num_threads,chunk_size,speedup,efficiency,gflops_speedup,bandwidth_speedup
+Andrews.mtx,static,32,1000,11.59009,0.36219,17.038381,17.038368
+Hook_1498.mtx,static,16,1000,3.094922,0.193433,3.165586,3.165586
+bcsstk27.mtx,static,4,100,1.771891,0.442973,1.905765,1.905765
+msdoor.mtx,static,32,10000,5.004808,0.1564,12.738002,12.738003
+tmt_sym.mtx,static,32,10000,18.176794,0.568025,21.414776,21.414787

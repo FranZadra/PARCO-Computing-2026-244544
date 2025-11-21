@@ -33,7 +33,6 @@ int main(int argc, char *argv[])
             repeats = atoi(argv[5]);
 
             setOmpConfig(ompConf);
-            //printOmpConfig(ompConf);
         }
         #else
         if(argc != 3) {
@@ -60,6 +59,19 @@ int main(int argc, char *argv[])
     double* res = (double*)malloc(matrix.rows*sizeof(double));
     rvec = randVect(rvec, matrix.cols);
 
+    // Calculate total bytes transferred (bandwidth)
+    long long bytes_transferred = 
+        (long long)matrix.nz * sizeof(double) +      
+        (long long)matrix.nz * sizeof(int) +         
+        (long long)(matrix.rows + 1) * sizeof(int) + 
+        (long long)matrix.cols * sizeof(double) +  
+        (long long)matrix.rows * sizeof(double);     
+    
+    double bytes_gb = bytes_transferred / (1024.0 * 1024.0 * 1024.0);
+
+    // Calculate flops
+    long long flops = 2LL * matrix.nz;
+
     // cache warm-up
     spVM(&matrix, rvec, res);
 
@@ -68,7 +80,13 @@ int main(int argc, char *argv[])
         spVM(&matrix, rvec, res);
         GET_TIME(finish)
         elapsed = finish - start;
+
+        double bandwidth_gbs = bytes_gb / elapsed;
+        double gflops = (flops / elapsed) / 1e9;  // GFLOPS
+
         printf("Result_time: %f\n", elapsed * 1000.0);
+        printf("Result_bandwidth: %.6f\n", bandwidth_gbs);
+        printf("Result_gflops: %.6f\n", gflops);
     }
         
     
