@@ -16,7 +16,7 @@ print("-"*50)
 print("SpMV - Data analysis and Plots")
 print("-"*50)
 
-
+# ------ DATA REDUCTION ------
 # STEP 1: 90th percentile
 
 if not os.path.exists('results/benchResults.csv'):
@@ -619,9 +619,9 @@ print("\n" + "-"*80)
 print("Generating Roofline Model plots...")
 print("-"*80)
 
-# Hardware specs
-PEAK_BANDWIDTH_GB_s = 563.2
-PEAK_GFLOPS = 7053
+# Hardware specs, official intel for Intel Xeon Gold 6252N
+PEAK_BANDWIDTH_GB_s = 131
+PEAK_GFLOPS = 1075.2 
 
 print(f"\n Hardware specs:")
 print(f"   Peak Memory Bandwidth: {PEAK_BANDWIDTH_GB_s} GB/s")
@@ -668,7 +668,7 @@ for matrix in matrices:
            fontsize=11, fontweight='bold', ha='center', va='center',
            bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.7))
     
-    # Plot points with OFFSET labels to avoid overlap
+    # Plot points with offset labels to avoid overlap
     offset_angles = [0, 45, 90]  
     
     for idx, (_, row) in enumerate(best_per_schedule.iterrows()):
