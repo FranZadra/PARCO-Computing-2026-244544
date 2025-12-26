@@ -1,0 +1,9 @@
+# macOS
+.DS_Store
+
+# VS Code settings
+.vscode/
+
+# matrix files
+D1/data/*.mtx
+D2/data/*.mtx
