@@ -1,102 +1,195 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
-#include "timer.h"
+#include <mpi.h>
 #include "utils.h"
-#include "ompconfig.h"
-#ifdef _OPENMP
-    #include <omp.h>
-#endif
+#include "distribute.h"
+#include "communication.h"
 
-
-int main(int argc, char *argv[])
-{
-    srand(time(NULL));
-    double start, finish, elapsed; 
-    int repeats, i;
-    SparseMatrix matrix;
-
-    if (argc < 2)
-    {
-        fprintf(stderr, "Usage: %s <matrix_market_file>\n", argv[0]);
-        exit(EXIT_FAILURE);
-    } else {
-        #ifdef _OPENMP
-        if(argc != 6) {
-            fprintf(stderr, "Usage with OpenMP: %s <matrix_market_file> <num_threads> <schedule_type> <chunk_size> <repeats>\n", argv[0]);
-            exit(EXIT_FAILURE);
-        } else {
-            OmpConfig ompConf;
-            ompConf.num_threads = atoi(argv[2]);
-            ompConf.schedule_type = parseSchedule(argv[3]);
-            ompConf.chunk_size = atoi(argv[4]);
-            repeats = atoi(argv[5]);
-
-            setOmpConfig(ompConf);
+int main(int argc, char *argv[]) {
+    int rank, comm_size;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
+    
+    srand(time(NULL) + rank * 1000);
+    
+    double start_total = MPI_Wtime();
+    
+    if (argc < 3) {
+        if (rank == 0) {
+            printMPIUsage(argv[0]);
         }
-        #else
-        if(argc != 3) {
-            fprintf(stderr, "Usage: %s <matrix_market_file>\n", argv[0]);
-            exit(EXIT_FAILURE);
-        } 
-        repeats = atoi(argv[2]);
-        #endif
+        MPI_Finalize();
+        return EXIT_FAILURE;
+    }
+    
+    char* matrixFile = argv[1];
+    int repeats = atoi(argv[2]);
+    int synthetic = (strcmp(matrixFile, "synthetic") == 0);
+    
+    int rows_per_proc = 0;
+    int nnz_per_row = 0;
+    if (synthetic) {
+        if (argc < 5) {
+            if (rank == 0) {
+                fprintf(stderr, "Error: Synthetic mode requires rows_per_proc and nnz_per_row\n");
+                printMPIUsage(argv[0]);
+            }
+            MPI_Finalize();
+            return EXIT_FAILURE;
+        }
+        rows_per_proc = atoi(argv[3]);
+        nnz_per_row = atoi(argv[4]);
     }
 
-    if (loadMatrixMarket(argv[1], &matrix) != 0)
-    {
-        fprintf(stderr, "Failed to load matrix.\n");
-        exit(EXIT_FAILURE);
+    // MATRIX LOADING
+    SparseMatrix matrix;
+    int matrixRows, matrixCols, matrixNz;
+    
+    if (!synthetic) {
+        if (rank == 0) {
+            if (loadMatrixMarket(matrixFile, &matrix) != 0) {
+                fprintf(stderr, "Failed to load matrix\n");
+                MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+            }
+            
+            matrix.row_ptr = malloc((matrix.rows + 1) * sizeof(int));
+            matrix.col_ind = malloc(matrix.nz * sizeof(int));
+            matrix.vals = malloc(matrix.nz * sizeof(double));
+            
+            COOtoCSR(&matrix);
+            
+            matrixRows = matrix.rows;
+            matrixCols = matrix.cols;
+            matrixNz = matrix.nz;
+
+            printf("Real Matrix (Strong Scaling): Rows=%d | Cols=%d | NNZ=%d | Procs=%d\n", 
+                   matrixRows, matrixCols, matrixNz, comm_size);
+        }
+        
+        MPI_Bcast(&matrixRows, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&matrixCols, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&matrixNz, 1, MPI_INT, 0, MPI_COMM_WORLD);
+        
+    } else {
+        matrixRows = rows_per_proc * comm_size;
+        matrixCols = matrixRows;
+        matrixNz = 0;
+        
+        if (rank == 0) {
+            printf("Synthetic Matrix (Weak Scaling): Rows/proc=%d | Total rows=%d | NNZ/row=~%d | Procs=%d\n", rows_per_proc, matrixRows, nnz_per_row, comm_size);
+        }
     }
-
-    matrix.row_ptr = malloc((matrix.rows + 1) * sizeof(int));
-    matrix.col_ind = malloc(matrix.nz * sizeof(int));
-    matrix.vals = malloc(matrix.nz * sizeof(double));
     
-    COOtoCSR(&matrix);
+    // MATRIX DISTRIBUTION AMONG PROCESSES
+    SparseMatrix localMatrix;
 
-    double* rvec = (double*)malloc(matrix.cols * sizeof(double));
-    double* res = (double*)malloc(matrix.rows*sizeof(double));
-    rvec = randVect(rvec, matrix.cols);
-
-    // Calculate total bytes transferred (bandwidth)
-    long long bytes_transferred = 
-        (long long)matrix.nz * sizeof(double) +      
-        (long long)matrix.nz * sizeof(int) +         
-        (long long)(matrix.rows + 1) * sizeof(int) + 
-        (long long)matrix.cols * sizeof(double) +  
-        (long long)matrix.rows * sizeof(double);     
-    
-    double bytes_gb = bytes_transferred / (1024.0 * 1024.0 * 1024.0);
-
-    // Calculate flops
-    long long flops = 2LL * matrix.nz;
-
-    // cache warm-up
-    spVM(&matrix, rvec, res);
-
-    for(i = 0; i < repeats; i++) {
-        GET_TIME(start)
-        spVM(&matrix, rvec, res);
-        GET_TIME(finish)
-        elapsed = finish - start;
-
-        double bandwidth_gbs = bytes_gb / elapsed;
-        double gflops = (flops / elapsed) / 1e9;  // GFLOPS
-
-        printf("Result_time: %f\n", elapsed * 1000.0);
-        printf("Result_bandwidth: %.6f\n", bandwidth_gbs);
-        printf("Result_gflops: %.6f\n", gflops);
+    if (!synthetic) {
+        distributeMatrix(&matrix, &localMatrix, rank, comm_size);
+        
+        if (rank == 0) {
+            freeSparseMatrix(&matrix);
+        }
+    } else {
+        generateLocalMatrix(&localMatrix, rows_per_proc, matrixCols, nnz_per_row, rank, comm_size);
+        int local_nz = localMatrix.nz;
+        MPI_Allreduce(&local_nz, &matrixNz, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     }
         
+    if (rank == 0) {
+        printf("Matrix distributed and converted to CSR\n");
+    }
     
-    freeSparseMatrix(&matrix);
-    free(rvec);
-    free(res);
+    // GHOST ELEMENTS IDENTIFICATION
+    CommPattern commPattern;
+    identifyGhostColumns(&localMatrix, &commPattern, rank, comm_size, matrixCols);
+    
+    if (rank == 0) {
+        printf("Ghost columns identified: %d total ghost values needed\n", commPattern.num_ghost_cols);
+    }
+    
+    // RANDOM VECTOR DISTRIBUTION
+    int local_vec_size = matrixCols / comm_size;
+    if (rank < (matrixCols % comm_size)) {
+        local_vec_size++;
+    }
+    
+    double *localRandVec = (double*)malloc(local_vec_size * sizeof(double));
+    double *localResult = (double*)malloc(localMatrix.rows * sizeof(double));
+    
+    // Row ownership rule: owner(i) = i mod P
+    for (int i = 0; i < local_vec_size; i++) {
+        //int global_idx = rank + i * comm_size; 
+        localRandVec[i] = ((double)rand() / RAND_MAX) * 8.0 - 4.0;
+    }
+    
+    if (rank == 0) {
+        printf("Local vector initialized (size=%d per process)\n", local_vec_size);
+    }
+    
+    // CACHE WARMUP
+    parallelSpMV(&localMatrix, localRandVec, localResult, &commPattern, rank, comm_size);
+    MPI_Barrier(MPI_COMM_WORLD);
+    
+    // SPMV BENCHMARK and DATA COLLECTION
+    PerformanceMetrics metrics;
+    metrics.local_nz = localMatrix.nz;
+    metrics.ghost_entries = commPattern.num_ghost_cols;
+    metrics.local_flops = 2LL * localMatrix.nz;
+    metrics.num_repeats = repeats;
 
-	return 0;
+    metrics.elapsed_times = (double*)malloc(repeats * sizeof(double));
+    metrics.comm_times = (double*)malloc(repeats * sizeof(double));
+
+    for (int r = 0; r < repeats; r++) {
+        MPI_Barrier(MPI_COMM_WORLD);
+        double iter_start = MPI_Wtime();
+        
+        double comm_start = MPI_Wtime();
+        exchangeGhostValues(localRandVec, &commPattern, rank, comm_size);
+        double comm_end = MPI_Wtime();
+        metrics.comm_times[r] = comm_end - comm_start;
+        
+        localSpMV(&localMatrix, localRandVec, localResult, &commPattern, rank, comm_size);
+        
+        double iter_end = MPI_Wtime();
+        metrics.elapsed_times[r] = iter_end - iter_start;
+    }
+
+
+    // RAW OUTPUT DATA
+    for (int r = 0; r < repeats; r++) {
+        printf("[RESULT] %d,%d,%d,%.9f,%.9f,%d,%d,%lld\n",
+            rank, comm_size, r,
+            metrics.elapsed_times[r], 
+            metrics.comm_times[r],
+            metrics.local_nz,
+            metrics.ghost_entries,
+            metrics.local_flops);
+        fflush(stdout); 
+    }
+
+    if (rank == 0) {
+        printf("\nBenchmark Summary\n");
+        printf("Processes: %d\n", comm_size);
+        printf("Iterations: %d\n", repeats);
+        printf("Matrix NNZ: %d\n", matrixNz);
+    }
+
+    double end_total = MPI_Wtime();
+    if (rank == 0) {
+        printf("Total execution time: %.3f seconds\n", end_total - start_total);
+    }
+
+    free(metrics.elapsed_times);
+    free(metrics.comm_times);
+    freeSparseMatrix(&localMatrix);
+    freeCommPattern(&commPattern);
+    free(localRandVec);
+    free(localResult);
+
+    MPI_Finalize();
+    return EXIT_SUCCESS;
 }
-
-
-
-

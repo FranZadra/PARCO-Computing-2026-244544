@@ -1,15 +1,12 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <mpi.h>
 #include "utils.h"
 #include "mmio.h"
 
-
 void spVM(SparseMatrix* matrix, double* rvec, double *res) {
     int i, j;
-    #ifdef _OPENMP
-        #pragma omp parallel for schedule(runtime) private(i,j)
-    #endif
     for (i = 0; i < matrix->rows; ++i) {
         double sum = 0.0;
         for (j = matrix->row_ptr[i]; j < matrix->row_ptr[i+1]; ++j) {
@@ -17,6 +14,15 @@ void spVM(SparseMatrix* matrix, double* rvec, double *res) {
         }
         res[i] = sum;
     }
+}
+
+void printMPIUsage(char* prog_name) {
+    printf("Usage:\n");
+    printf("  Strong scaling: mpirun -np <P> %s <matrix.mtx> <repeats>\n", prog_name);
+    printf("  Weak scaling:   mpirun -np <P> %s synthetic <repeats> <rows_per_proc> <nnz_per_row>\n", prog_name);
+    printf("\nExamples:\n");
+    printf("  mpirun -np 4 %s matrices/amazon.mtx 10\n", prog_name);
+    printf("  mpirun -np 8 %s synthetic 10 10000 50\n", prog_name);
 }
 
 int loadMatrixMarket(const char *filename, SparseMatrix* matrix)
@@ -76,6 +82,13 @@ int loadMatrixMarket(const char *filename, SparseMatrix* matrix)
     fclose(f);
 
     return 0;
+}
+
+void printMatrixInfo(SparseMatrix* matrix){
+    printf("Matrix Info:\n");
+    printf("  Rows: %d\n", matrix->rows);
+    printf("  Columns: %d\n", matrix->cols);
+    printf("  Non-Zero Elements: %d\n", matrix->nz);
 }
 
 void printVectorInt(char* name, int *v, int size) {
@@ -180,4 +193,7 @@ void freeSparseMatrix(SparseMatrix *matrix) {
     free(matrix->row_ptr);
     free(matrix->col_ind);
     free(matrix->vals);
+    if(matrix->global_row_indices) {
+        free(matrix->global_row_indices);
+    }
 }
