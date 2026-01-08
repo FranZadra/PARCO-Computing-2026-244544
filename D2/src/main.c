@@ -58,6 +58,11 @@ int main(int argc, char *argv[]) {
             matrix.row_ptr = malloc((matrix.rows + 1) * sizeof(int));
             matrix.col_ind = malloc(matrix.nz * sizeof(int));
             matrix.vals = malloc(matrix.nz * sizeof(double));
+
+            if (!matrix.row_ptr || !matrix.col_ind || !matrix.vals) {
+                fprintf(stderr, "Memory allocation failed\n");
+                MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+            }
             
             COOtoCSR(&matrix);
             
@@ -65,13 +70,25 @@ int main(int argc, char *argv[]) {
             matrixCols = matrix.cols;
             matrixNz = matrix.nz;
 
-            printf("Real Matrix (Strong Scaling): Rows=%d | Cols=%d | NNZ=%d | Procs=%d\n", 
-                   matrixRows, matrixCols, matrixNz, comm_size);
+            printf("Real Matrix (Strong Scaling): Rows=%d | Cols=%d | NNZ=%d | Procs=%d\n", matrixRows, matrixCols, matrixNz, comm_size);
         }
         
         MPI_Bcast(&matrixRows, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(&matrixCols, 1, MPI_INT, 0, MPI_COMM_WORLD);
         MPI_Bcast(&matrixNz, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+        if (rank != 0) {
+            matrix.rows = matrixRows;
+            matrix.cols = matrixCols;
+            matrix.nz = matrixNz;
+            
+            matrix.Arow = malloc(matrix.nz * sizeof(int));
+            matrix.Acol = malloc(matrix.nz * sizeof(int));
+            matrix.Aval = malloc(matrix.nz * sizeof(double));
+        }
+        MPI_Bcast(matrix.Arow, matrixNz, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(matrix.Acol, matrixNz, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Bcast(matrix.Aval, matrixNz, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         
     } else {
         matrixRows = rows_per_proc * comm_size;
@@ -88,10 +105,6 @@ int main(int argc, char *argv[]) {
 
     if (!synthetic) {
         distributeMatrix(&matrix, &localMatrix, rank, comm_size);
-        
-        if (rank == 0) {
-            freeSparseMatrix(&matrix);
-        }
     } else {
         generateLocalMatrix(&localMatrix, rows_per_proc, matrixCols, nnz_per_row, rank, comm_size);
         int local_nz = localMatrix.nz;
@@ -189,7 +202,17 @@ int main(int argc, char *argv[]) {
     freeCommPattern(&commPattern);
     free(localRandVec);
     free(localResult);
-
+    if (!synthetic) {
+        if (matrix.Arow) free(matrix.Arow);
+        if (matrix.Acol) free(matrix.Acol);
+        if (matrix.Aval) free(matrix.Aval);
+        
+        if (rank == 0) {
+            if (matrix.row_ptr) free(matrix.row_ptr);
+            if (matrix.col_ind) free(matrix.col_ind);
+            if (matrix.vals) free(matrix.vals);
+        }
+    }
     MPI_Finalize();
     return EXIT_SUCCESS;
 }

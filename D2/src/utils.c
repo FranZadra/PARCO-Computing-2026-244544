@@ -187,13 +187,36 @@ double* randVect(double* rvec, int COLS){
 }
 
 void freeSparseMatrix(SparseMatrix *matrix) {
-    free(matrix->Arow);
-    free(matrix->Acol);
-    free(matrix->Aval);
-    free(matrix->row_ptr);
-    free(matrix->col_ind);
-    free(matrix->vals);
-    if(matrix->global_row_indices) {
+    if (matrix == NULL) return;
+    
+    if (matrix->Arow != NULL) {
+        free(matrix->Arow);
+        matrix->Arow = NULL;
+    }
+    if (matrix->Acol != NULL) {
+        free(matrix->Acol);
+        matrix->Acol = NULL;
+    }
+    if (matrix->Aval != NULL) {
+        free(matrix->Aval);
+        matrix->Aval = NULL;
+    }
+    
+    if (matrix->row_ptr != NULL) {
+        free(matrix->row_ptr);
+        matrix->row_ptr = NULL;
+    }
+    if (matrix->col_ind != NULL) {
+        free(matrix->col_ind);
+        matrix->col_ind = NULL;
+    }
+    if (matrix->vals != NULL) {
+        free(matrix->vals);
+        matrix->vals = NULL;
+    }
+    
+    if (matrix->global_row_indices != NULL) {
         free(matrix->global_row_indices);
+        matrix->global_row_indices = NULL;
     }
 }

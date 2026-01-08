@@ -21,6 +21,10 @@ NNZ_PER_ROW=50
 MPICC="mpicc"
 CFLAGS="-O3 -Wall -I$INCLUDE_DIR"
 
+# Output files
+STRONG_SCALING_CSV="$RESULTS_DIR/strong_scaling_all.csv"
+WEAK_SCALING_CSV="$RESULTS_DIR/weak_scaling_all.csv"
+
 find_matrices() {
     MATRICES=($(ls "$DATA_DIR"/*.mtx 2>/dev/null | xargs -n 1 basename))
     if [ ${#MATRICES[@]} -eq 0 ]; then
@@ -52,21 +56,20 @@ run_strong_scaling() {
     echo "STRONG SCALING: $matrix | $num_procs processes"
     echo ""
     
-    cd "$RESULTS_DIR" || exit 1
+    local log_file="$RESULTS_DIR/logs/strong_${matrix%.mtx}_np${num_procs}.log"
+    mkdir -p "$RESULTS_DIR/logs"
     
-    mpirun -np "$num_procs" "$EXEC" "$DATA_DIR/$matrix" "$REPEATS"
+    mpirun -np "$num_procs" "$EXEC" "$DATA_DIR/$matrix" "$REPEATS" 2>&1 | tee "$log_file" | \
+        grep "^\[RESULT\]" | sed 's/\[RESULT\] //' | \
+        awk -v matrix="${matrix%.mtx}" '{print $0","matrix}' >> "$STRONG_SCALING_CSV"
     
-    if [ $? -ne 0 ]; then
+    if [ ${PIPESTATUS[0]} -ne 0 ]; then
         echo "ERROR: MPI execution failed"
         return 1
     fi
     
-    mkdir -p "strong_${matrix%.mtx}"
-    mv timings_rank*_np${num_procs}.csv "strong_${matrix%.mtx}/"
-    
-    cd - > /dev/null
-    
-    echo "Data saved to: $RESULTS_DIR/strong_${matrix%.mtx}/"
+    echo " -> Data appended to: $STRONG_SCALING_CSV"
+    echo " -> Full log saved to: $log_file"
 }
 
 run_weak_scaling() {
@@ -75,68 +78,79 @@ run_weak_scaling() {
     
     echo ""
     echo "WEAK SCALING: $num_procs processes | ${total_rows} total rows"
+    echo ""
     
-    cd "$RESULTS_DIR" || exit 1
+    local log_file="$RESULTS_DIR/logs/weak_np${num_procs}.log"
+    mkdir -p "$RESULTS_DIR/logs"
     
-    mpirun -np "$num_procs" "$EXEC" synthetic "$REPEATS" "$ROWS_PER_PROC" "$NNZ_PER_ROW"
+    mpirun -np "$num_procs" "$EXEC" synthetic "$REPEATS" "$ROWS_PER_PROC" "$NNZ_PER_ROW" 2>&1 | \
+        tee "$log_file" | grep "^\[RESULT\]" | sed 's/\[RESULT\] //' >> "$WEAK_SCALING_CSV"
     
-    if [ $? -ne 0 ]; then
+    if [ ${PIPESTATUS[0]} -ne 0 ]; then
         echo "ERROR: MPI execution failed"
         return 1
     fi
     
-    # Organizza output
-    mkdir -p "weak_scaling"
-    mv timings_rank*_np${num_procs}.csv "weak_scaling/"
-    
-    cd - > /dev/null
-    
-    echo "Data saved to: $RESULTS_DIR/weak_scaling/"
+    echo " Data appended to: $WEAK_SCALING_CSV"
+    echo " Full log saved to: $log_file"
 }
 
+initialize_csv_files() {
+    # Header per strong scaling (con colonna matrix name)
+    echo "rank,num_procs,run,elapsed_time,comm_time,local_nz,ghost_entries,local_flops,matrix" > "$STRONG_SCALING_CSV"
+    
+    # Header per weak scaling
+    echo "rank,num_procs,run,elapsed_time,comm_time,local_nz,ghost_entries,local_flops" > "$WEAK_SCALING_CSV"
+    
+    echo "CSV files initialized:"
+    echo "  - $STRONG_SCALING_CSV"
+    echo "  - $WEAK_SCALING_CSV"
+}
 
-echo "MPI SpMV Benchmark"
-echo "  Max processes: $MAX_PROCESSES"
-echo "  Repeats: $REPEATS"
-echo "  Data directory: $DATA_DIR"
-
-rm -rf "$RESULTS_DIR"/strong_*
-rm -rf "$RESULTS_DIR"/weak_scaling
+rm -rf "$RESULTS_DIR"/logs
+rm -f "$STRONG_SCALING_CSV" "$WEAK_SCALING_CSV"
 mkdir -p "$RESULTS_DIR"
 
 find_matrices
 compile_code
+initialize_csv_files
 
 echo ""
-echo "Strong Scaling Tests"
+echo "Strong Scaling Tests:"
 echo ""
 
 for matrix in "${MATRICES[@]}"; do
+    echo ""
+    echo "Testing matrix: $matrix"
+    echo "-----------------------------------------"
     for num_procs in "${PROCESSES[@]}"; do
         if [ "$num_procs" -le "$MAX_PROCESSES" ]; then
             run_strong_scaling "$matrix" "$num_procs"
-            sleep 2 
+            sleep 1 
         fi
     done
 done
 
 echo ""
-echo "Weak Scaling Tests"
+echo "Weak Scaling Tests:"
 echo ""
 
 for num_procs in "${PROCESSES[@]}"; do
     if [ "$num_procs" -le "$MAX_PROCESSES" ]; then
         run_weak_scaling "$num_procs"
-        sleep 2
+        sleep 1
     fi
 done
 
 echo ""
-echo "Data Analysis"
+echo "Benchmark Summary:"
 echo ""
-echo "Raw CSV files generated in: $RESULTS_DIR"
+echo "Results Summary:"
+echo "  Strong Scaling: $STRONG_SCALING_CSV"
+echo "  Weak Scaling:   $WEAK_SCALING_CSV"
+echo "  Full Logs:      $RESULTS_DIR/logs/"
 echo ""
-
-echo "---------------------"
-echo "Benchmark Completed"
-echo "---------------------"
+echo "Total data points collected:"
+echo "  Strong: $(tail -n +2 "$STRONG_SCALING_CSV" | wc -l) measurements"
+echo "  Weak:   $(tail -n +2 "$WEAK_SCALING_CSV" | wc -l) measurements"
+echo ""
