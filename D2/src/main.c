@@ -98,6 +98,7 @@ int main(int argc, char *argv[]) {
         if (rank == 0) {
             printf("Synthetic Matrix (Weak Scaling): Rows/proc=%d | Total rows=%d | NNZ/row=~%d | Procs=%d\n", rows_per_proc, matrixRows, nnz_per_row, comm_size);
         }
+        MPI_Barrier(MPI_COMM_WORLD);
     }
     
     // MATRIX DISTRIBUTION AMONG PROCESSES
@@ -107,7 +108,11 @@ int main(int argc, char *argv[]) {
         distributeMatrix(&matrix, &localMatrix, rank, comm_size);
     } else {
         generateLocalMatrix(&localMatrix, rows_per_proc, matrixCols, nnz_per_row, rank, comm_size);
+        
         int local_nz = localMatrix.nz;
+
+        MPI_Barrier(MPI_COMM_WORLD);
+        
         MPI_Allreduce(&local_nz, &matrixNz, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     }
         
@@ -115,6 +120,8 @@ int main(int argc, char *argv[]) {
         printf("Matrix distributed and converted to CSR\n");
     }
     
+    MPI_Barrier(MPI_COMM_WORLD);
+
     // GHOST ELEMENTS IDENTIFICATION
     CommPattern commPattern;
     identifyGhostColumns(&localMatrix, &commPattern, rank, comm_size, matrixCols);
@@ -123,18 +130,25 @@ int main(int argc, char *argv[]) {
         printf("Ghost columns identified: %d total ghost values needed\n", commPattern.num_ghost_cols);
     }
     
-    // RANDOM VECTOR DISTRIBUTION
+    // RANDOM VECTOR DISTRIBUTION - CYCLIC
+    // Owner of element i is: rank = i % comm_size
     int local_vec_size = matrixCols / comm_size;
     if (rank < (matrixCols % comm_size)) {
         local_vec_size++;
     }
-    
+
     double *localRandVec = (double*)malloc(local_vec_size * sizeof(double));
     double *localResult = (double*)malloc(localMatrix.rows * sizeof(double));
-    
-    // Row ownership rule: owner(i) = i mod P
+
+    if (localRandVec == NULL || localResult == NULL) {
+        fprintf(stderr, "[Rank %d] ERROR: Failed to allocate vectors\n", rank);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
+
+    // Initialize with cyclic ownership
     for (int i = 0; i < local_vec_size; i++) {
-        //int global_idx = rank + i * comm_size; 
+        // Global index with cyclic distribution
+        int global_idx = rank + i * comm_size;
         localRandVec[i] = ((double)rand() / RAND_MAX) * 8.0 - 4.0;
     }
     

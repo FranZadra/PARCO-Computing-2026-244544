@@ -107,15 +107,15 @@ fi
 chmod +x testsBash.sh
 
 echo "Configuring MPI environment..."
-export MPICH_PROCESS_AFFINITY=1          # Abilita process pinning
-export MPICH_CPU_BINDING=1               # Bind processi a CPU
-export OMP_NUM_THREADS=1                 # Disabilita OpenMP (solo MPI puro)
+export MPICH_PROCESS_AFFINITY=1          
+export MPICH_CPU_BINDING=1               
+export OMP_NUM_THREADS=1                 
 echo "MPI configuration set."
 echo ""
 
 # Running the benchmark script
 echo "Starting time benchmark execution..."
-./testtBash.sh
+./testsBash.sh
 
 exit_code=$?
 

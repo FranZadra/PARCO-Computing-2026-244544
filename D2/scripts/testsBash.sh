@@ -96,10 +96,10 @@ run_weak_scaling() {
 }
 
 initialize_csv_files() {
-    # Header per strong scaling (con colonna matrix name)
+    # Header for strong scaling (con colonna matrix name)
     echo "rank,num_procs,run,elapsed_time,comm_time,local_nz,ghost_entries,local_flops,matrix" > "$STRONG_SCALING_CSV"
     
-    # Header per weak scaling
+    # Header for weak scaling
     echo "rank,num_procs,run,elapsed_time,comm_time,local_nz,ghost_entries,local_flops" > "$WEAK_SCALING_CSV"
     
     echo "CSV files initialized:"
