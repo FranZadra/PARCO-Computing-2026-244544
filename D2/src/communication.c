@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef _OPENMP
+    #include <omp.h>
+#endif
 #include "communication.h"
 
 void identifyGhostColumns(SparseMatrix *local_matrix, CommPattern *comm_pattern, int rank, int comm_size, int total_cols) {
@@ -155,9 +158,13 @@ void exchangeGhostValues(double *local_x, CommPattern *comm_pattern, int rank, i
     free(send_buf);
 }
 
-void localSpMV(SparseMatrix *local_matrix, double *localRandVec, double *localResult, CommPattern *comm_pattern, int rank, int comm_size) {
+void localSpMV(SparseMatrix *local_matrix, double *localRandVec, double *localResult, 
+               CommPattern *comm_pattern, int rank, int comm_size) {
     int i, j;
     
+    #ifdef _OPENMP
+        #pragma omp parallel for
+    #endif  
     for (i = 0; i < local_matrix->rows; i++) {
         double sum = 0.0;
         for (j = local_matrix->row_ptr[i]; j < local_matrix->row_ptr[i + 1]; j++) {
@@ -166,20 +173,17 @@ void localSpMV(SparseMatrix *local_matrix, double *localRandVec, double *localRe
             int col_owner = global_col % comm_size;
             
             if (col_owner == rank) {
-                // Local column
                 int local_idx = global_col / comm_size;
                 vect_val = localRandVec[local_idx];
             } else {
-                // Ghost column
                 int ghost_idx = comm_pattern->ghost_to_local[global_col];
                 if (ghost_idx < 0 || ghost_idx >= comm_pattern->num_ghost_cols) {
-                    fprintf(stderr, "[Rank %d] ERROR: Invalid ghost_idx %d for global_col %d\n", 
+                    fprintf(stderr, "[Rank %d] ERROR: Invalid ghost_idx %d for global_col %d\n",
                             rank, ghost_idx, global_col);
                     MPI_Abort(MPI_COMM_WORLD, 1);
                 }
                 vect_val = comm_pattern->ghost_values[ghost_idx];
             }
-            
             sum += local_matrix->vals[j] * vect_val;
         }
         localResult[i] = sum;
