@@ -1,11 +1,11 @@
  ----- 
 MPI SpMV BENCHMARK JOB
  ----- 
-Job ID:            4987210.hpc-head-n1.unitn.it
+Job ID:            4988565.hpc-head-n1.unitn.it
 Job Name:          spmv_mpi
 Queue:             short_cpuQ
 Working Directory: /home/francesco.zadra-1/D2/scripts
-Start time:        Sun Jan 11 01:38:39 CET 2026
+Start time:        Sun Jan 11 20:39:56 CET 2026
 
 --- PBS Resource Request ---
 Nodes:             4
@@ -17,7 +17,7 @@ Walltime:          06:00:00
  ----- 
 
 Saving system information...
-System info saved to: ../results/system_info_4987210.hpc-head-n1.unitn.it.txt
+System info saved to: ../results/system_info_4988565.hpc-head-n1.unitn.it.txt
 
 Verifying environment...
 Configuring MPI environment...
@@ -30,10 +30,6 @@ MPI compilation successful
 Compiling MPI+OpenMP hybrid version...
 Hybrid compilation successful
 CSV files initialized
-
-==========================================
-PHASE 1: MPI-ONLY TESTS
-==========================================
 
 Strong Scaling Tests (MPI-only):
 
@@ -296,54 +292,48 @@ WEAK SCALING [MPI]: 128 processes | 1280000 total rows
  -> Data appended to: ../results/weak_scaling_all.csv
  -> Full log saved to: ../results/logs/weak_MPI_np128.log
 
-==========================================
-PHASE 2: MPI+OpenMP HYBRID TESTS
-==========================================
-OpenMP Configuration: 4 threads, schedule(dynamic,64), bind(close)
-
-
 Strong Scaling Tests (MPI+OpenMP):
 
 
 Testing matrix: Andrews.mtx
 -----------------------------------------
 
-STRONG SCALING [HYBRID]: Andrews.mtx | 1 processes
+STRONG SCALING [HYBRID]: Andrews.mtx | 1 processes | 24 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_Andrews_np1.log
 
-STRONG SCALING [HYBRID]: Andrews.mtx | 2 processes
+STRONG SCALING [HYBRID]: Andrews.mtx | 2 processes | 12 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_Andrews_np2.log
 
-STRONG SCALING [HYBRID]: Andrews.mtx | 4 processes
+STRONG SCALING [HYBRID]: Andrews.mtx | 4 processes | 6 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_Andrews_np4.log
 
-STRONG SCALING [HYBRID]: Andrews.mtx | 8 processes
+STRONG SCALING [HYBRID]: Andrews.mtx | 8 processes | 3 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_Andrews_np8.log
 
-STRONG SCALING [HYBRID]: Andrews.mtx | 16 processes
+STRONG SCALING [HYBRID]: Andrews.mtx | 16 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_Andrews_np16.log
 
-STRONG SCALING [HYBRID]: Andrews.mtx | 32 processes
+STRONG SCALING [HYBRID]: Andrews.mtx | 32 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_Andrews_np32.log
 
-STRONG SCALING [HYBRID]: Andrews.mtx | 64 processes
+STRONG SCALING [HYBRID]: Andrews.mtx | 64 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_Andrews_np64.log
 
-STRONG SCALING [HYBRID]: Andrews.mtx | 128 processes
+STRONG SCALING [HYBRID]: Andrews.mtx | 128 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_Andrews_np128.log
@@ -351,42 +341,42 @@ STRONG SCALING [HYBRID]: Andrews.mtx | 128 processes
 Testing matrix: bcsstk27.mtx
 -----------------------------------------
 
-STRONG SCALING [HYBRID]: bcsstk27.mtx | 1 processes
+STRONG SCALING [HYBRID]: bcsstk27.mtx | 1 processes | 24 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_bcsstk27_np1.log
 
-STRONG SCALING [HYBRID]: bcsstk27.mtx | 2 processes
+STRONG SCALING [HYBRID]: bcsstk27.mtx | 2 processes | 12 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_bcsstk27_np2.log
 
-STRONG SCALING [HYBRID]: bcsstk27.mtx | 4 processes
+STRONG SCALING [HYBRID]: bcsstk27.mtx | 4 processes | 6 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_bcsstk27_np4.log
 
-STRONG SCALING [HYBRID]: bcsstk27.mtx | 8 processes
+STRONG SCALING [HYBRID]: bcsstk27.mtx | 8 processes | 3 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_bcsstk27_np8.log
 
-STRONG SCALING [HYBRID]: bcsstk27.mtx | 16 processes
+STRONG SCALING [HYBRID]: bcsstk27.mtx | 16 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_bcsstk27_np16.log
 
-STRONG SCALING [HYBRID]: bcsstk27.mtx | 32 processes
+STRONG SCALING [HYBRID]: bcsstk27.mtx | 32 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_bcsstk27_np32.log
 
-STRONG SCALING [HYBRID]: bcsstk27.mtx | 64 processes
+STRONG SCALING [HYBRID]: bcsstk27.mtx | 64 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_bcsstk27_np64.log
 
-STRONG SCALING [HYBRID]: bcsstk27.mtx | 128 processes
+STRONG SCALING [HYBRID]: bcsstk27.mtx | 128 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_bcsstk27_np128.log
@@ -394,42 +384,42 @@ STRONG SCALING [HYBRID]: bcsstk27.mtx | 128 processes
 Testing matrix: Hook_1498.mtx
 -----------------------------------------
 
-STRONG SCALING [HYBRID]: Hook_1498.mtx | 1 processes
+STRONG SCALING [HYBRID]: Hook_1498.mtx | 1 processes | 24 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_Hook_1498_np1.log
 
-STRONG SCALING [HYBRID]: Hook_1498.mtx | 2 processes
+STRONG SCALING [HYBRID]: Hook_1498.mtx | 2 processes | 12 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_Hook_1498_np2.log
 
-STRONG SCALING [HYBRID]: Hook_1498.mtx | 4 processes
+STRONG SCALING [HYBRID]: Hook_1498.mtx | 4 processes | 6 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_Hook_1498_np4.log
 
-STRONG SCALING [HYBRID]: Hook_1498.mtx | 8 processes
+STRONG SCALING [HYBRID]: Hook_1498.mtx | 8 processes | 3 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_Hook_1498_np8.log
 
-STRONG SCALING [HYBRID]: Hook_1498.mtx | 16 processes
+STRONG SCALING [HYBRID]: Hook_1498.mtx | 16 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_Hook_1498_np16.log
 
-STRONG SCALING [HYBRID]: Hook_1498.mtx | 32 processes
+STRONG SCALING [HYBRID]: Hook_1498.mtx | 32 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_Hook_1498_np32.log
 
-STRONG SCALING [HYBRID]: Hook_1498.mtx | 64 processes
+STRONG SCALING [HYBRID]: Hook_1498.mtx | 64 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_Hook_1498_np64.log
 
-STRONG SCALING [HYBRID]: Hook_1498.mtx | 128 processes
+STRONG SCALING [HYBRID]: Hook_1498.mtx | 128 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_Hook_1498_np128.log
@@ -437,42 +427,42 @@ STRONG SCALING [HYBRID]: Hook_1498.mtx | 128 processes
 Testing matrix: msdoor.mtx
 -----------------------------------------
 
-STRONG SCALING [HYBRID]: msdoor.mtx | 1 processes
+STRONG SCALING [HYBRID]: msdoor.mtx | 1 processes | 24 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_msdoor_np1.log
 
-STRONG SCALING [HYBRID]: msdoor.mtx | 2 processes
+STRONG SCALING [HYBRID]: msdoor.mtx | 2 processes | 12 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_msdoor_np2.log
 
-STRONG SCALING [HYBRID]: msdoor.mtx | 4 processes
+STRONG SCALING [HYBRID]: msdoor.mtx | 4 processes | 6 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_msdoor_np4.log
 
-STRONG SCALING [HYBRID]: msdoor.mtx | 8 processes
+STRONG SCALING [HYBRID]: msdoor.mtx | 8 processes | 3 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_msdoor_np8.log
 
-STRONG SCALING [HYBRID]: msdoor.mtx | 16 processes
+STRONG SCALING [HYBRID]: msdoor.mtx | 16 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_msdoor_np16.log
 
-STRONG SCALING [HYBRID]: msdoor.mtx | 32 processes
+STRONG SCALING [HYBRID]: msdoor.mtx | 32 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_msdoor_np32.log
 
-STRONG SCALING [HYBRID]: msdoor.mtx | 64 processes
+STRONG SCALING [HYBRID]: msdoor.mtx | 64 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_msdoor_np64.log
 
-STRONG SCALING [HYBRID]: msdoor.mtx | 128 processes
+STRONG SCALING [HYBRID]: msdoor.mtx | 128 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_msdoor_np128.log
@@ -480,42 +470,42 @@ STRONG SCALING [HYBRID]: msdoor.mtx | 128 processes
 Testing matrix: tmt_sym.mtx
 -----------------------------------------
 
-STRONG SCALING [HYBRID]: tmt_sym.mtx | 1 processes
+STRONG SCALING [HYBRID]: tmt_sym.mtx | 1 processes | 24 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_tmt_sym_np1.log
 
-STRONG SCALING [HYBRID]: tmt_sym.mtx | 2 processes
+STRONG SCALING [HYBRID]: tmt_sym.mtx | 2 processes | 12 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_tmt_sym_np2.log
 
-STRONG SCALING [HYBRID]: tmt_sym.mtx | 4 processes
+STRONG SCALING [HYBRID]: tmt_sym.mtx | 4 processes | 6 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_tmt_sym_np4.log
 
-STRONG SCALING [HYBRID]: tmt_sym.mtx | 8 processes
+STRONG SCALING [HYBRID]: tmt_sym.mtx | 8 processes | 3 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_tmt_sym_np8.log
 
-STRONG SCALING [HYBRID]: tmt_sym.mtx | 16 processes
+STRONG SCALING [HYBRID]: tmt_sym.mtx | 16 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_tmt_sym_np16.log
 
-STRONG SCALING [HYBRID]: tmt_sym.mtx | 32 processes
+STRONG SCALING [HYBRID]: tmt_sym.mtx | 32 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_tmt_sym_np32.log
 
-STRONG SCALING [HYBRID]: tmt_sym.mtx | 64 processes
+STRONG SCALING [HYBRID]: tmt_sym.mtx | 64 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_tmt_sym_np64.log
 
-STRONG SCALING [HYBRID]: tmt_sym.mtx | 128 processes
+STRONG SCALING [HYBRID]: tmt_sym.mtx | 128 processes | 1 threads/process
 
  -> Data appended to: ../results/strong_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/strong_HYBRID_tmt_sym_np128.log
@@ -523,65 +513,63 @@ STRONG SCALING [HYBRID]: tmt_sym.mtx | 128 processes
 Weak Scaling Tests (MPI+OpenMP):
 
 
-WEAK SCALING [HYBRID]: 1 processes | 10000 total rows
+WEAK SCALING [HYBRID]: 1 processes | 10000 total rows | 24 threads/process
 
  -> Data appended to: ../results/weak_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/weak_HYBRID_np1.log
 
-WEAK SCALING [HYBRID]: 2 processes | 20000 total rows
+WEAK SCALING [HYBRID]: 2 processes | 20000 total rows | 12 threads/process
 
  -> Data appended to: ../results/weak_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/weak_HYBRID_np2.log
 
-WEAK SCALING [HYBRID]: 4 processes | 40000 total rows
+WEAK SCALING [HYBRID]: 4 processes | 40000 total rows | 6 threads/process
 
  -> Data appended to: ../results/weak_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/weak_HYBRID_np4.log
 
-WEAK SCALING [HYBRID]: 8 processes | 80000 total rows
+WEAK SCALING [HYBRID]: 8 processes | 80000 total rows | 3 threads/process
 
  -> Data appended to: ../results/weak_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/weak_HYBRID_np8.log
 
-WEAK SCALING [HYBRID]: 16 processes | 160000 total rows
+WEAK SCALING [HYBRID]: 16 processes | 160000 total rows | 1 threads/process
 
  -> Data appended to: ../results/weak_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/weak_HYBRID_np16.log
 
-WEAK SCALING [HYBRID]: 32 processes | 320000 total rows
+WEAK SCALING [HYBRID]: 32 processes | 320000 total rows | 1 threads/process
 
  -> Data appended to: ../results/weak_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/weak_HYBRID_np32.log
 
-WEAK SCALING [HYBRID]: 64 processes | 640000 total rows
+WEAK SCALING [HYBRID]: 64 processes | 640000 total rows | 1 threads/process
 
  -> Data appended to: ../results/weak_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/weak_HYBRID_np64.log
 
-WEAK SCALING [HYBRID]: 128 processes | 1280000 total rows
+WEAK SCALING [HYBRID]: 128 processes | 1280000 total rows | 1 threads/process
 
  -> Data appended to: ../results/weak_scaling_hybrid.csv
  -> Full log saved to: ../results/logs/weak_HYBRID_np128.log
 
-==========================================
 BENCHMARK SUMMARY
-==========================================
 
 Results Files:
- MPI-only Strong Scaling:   ../results/strong_scaling_all.csv
- MPI-only Weak Scaling:     ../results/weak_scaling_all.csv
- Hybrid Strong Scaling:     ../results/strong_scaling_hybrid.csv
- Hybrid Weak Scaling:       ../results/weak_scaling_hybrid.csv
- Full Logs:                 ../results/logs/
+ MPI Strong Scaling: ../results/strong_scaling_all.csv
+ MPI Weak Scaling: ../results/weak_scaling_all.csv
+ MPI+OpenMP Strong Scaling: ../results/strong_scaling_hybrid.csv
+ MPI+OpenMP Weak Scaling: ../results/weak_scaling_hybrid.csv
+ Full Logs: ../results/logs/
 
 Data points collected:
- MPI Strong:    12750 measurements
- MPI Weak:      2550 measurements
- Hybrid Strong: 12750 measurements
- Hybrid Weak:   2550 measurements
+ MPI Strong: 12749 measurements
+ MPI Weak: 2550 measurements
+ MPI+OpenMP Strong: 12750 measurements
+ MPI+OpenMP Weak: 2550 measurements
 
 
 --------------------------
 Job completed successfully!
-End time: Sun Jan 11 04:16:31 CET 2026
+End time: Sun Jan 11 21:31:08 CET 2026
 --------------------------

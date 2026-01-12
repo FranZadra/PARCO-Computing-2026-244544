@@ -2,19 +2,20 @@
 SYSTEM INFORMATION
  ----- 
 
-Job ID: 4986820.hpc-head-n1.unitn.it
+Job ID: 4988565.hpc-head-n1.unitn.it
 Job Name: spmv_mpi
-Date: Sat Jan 10 20:09:38 CET 2026
+Date: Sun Jan 11 20:39:56 CET 2026
 
 --- Allocated Nodes ---
-hpc-c11-node01.unitn.it
-hpc-c11-node18.unitn.it
-hpc-c11-node25.unitn.it
+hpc-c11-node15.unitn.it
+hpc-c11-node17.unitn.it
+hpc-c12-node05.unitn.it
+hpc-c12-node07.unitn.it
 
-Total nodes: 3
-Total processes: 96
+Total nodes: 4
+Total processes: 4
 
---- Master Node: hpc-c11-node18.unitn.it ---
+--- Master Node: hpc-c11-node15.unitn.it ---
 
 --- CPU Model ---
 Model name:            Intel(R) Xeon(R) Gold 6252N CPU @ 2.30GHz
@@ -43,12 +44,12 @@ L3 cache:              36608K
 
 --- Memory Information ---
               total        used        free      shared  buff/cache   available
-Mem:           503G         32G         25G        144M        445G        469G
-Swap:          8.0G        301M        7.7G
+Mem:           1.0T         24G        336G        120M        646G        981G
+Swap:          8.0G        1.1G        6.9G
 
 --- Network Information ---
-        inet 192.168.115.145  netmask 255.255.255.0  broadcast 192.168.115.255
-        inet6 fe80::b67a:f1ff:fe78:c01e  prefixlen 64  scopeid 0x20<link>
+        inet 192.168.115.81  netmask 255.255.255.0  broadcast 192.168.115.255
+        inet6 fe80::b67a:f1ff:fe78:d05c  prefixlen 64  scopeid 0x20<link>
 --
         inet6 ::1  prefixlen 128  scopeid 0x10<host>
 

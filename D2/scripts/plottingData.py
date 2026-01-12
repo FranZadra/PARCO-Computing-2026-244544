@@ -434,32 +434,6 @@ for matrix in matrices:
     plt.savefig(filename, dpi=300, bbox_inches='tight')
     plt.close()
 
-    # Efficiency
-    fig, ax = plt.subplots(figsize=(10, 7))
-
-    eff_mpi = (speedup_mpi / procs) * 100
-    eff_hyb = (speedup_hyb / procs) * 100
-
-    ax.plot(procs, eff_mpi, marker='o', linewidth=2.5, markersize=8,
-            label='MPI', color='#1f77b4')
-    ax.plot(procs, eff_hyb, marker='s', linewidth=2.5, markersize=8,
-            label='MPI+OpenMP', color='#ff7f0e')
-    ax.axhline(y=100, color='k', linestyle='--', label='Ideal', linewidth=2)
-
-    ax.set_xscale('log', base=2)
-    ax.set_ylim([0, 110])
-    ax.set_xlabel('Number of Processes', fontsize=13, fontweight='bold')
-    ax.set_ylabel('Efficiency (%)', fontsize=13, fontweight='bold')
-    ax.set_title(f'Strong Scaling Efficiency - MPI vs MPI+OpenMP ({matrix})',
-                 fontsize=14, fontweight='bold')
-    ax.grid(True, alpha=0.3)
-    ax.legend(fontsize=11)
-
-    plt.tight_layout()
-    filename = os.path.join(subdirs['comparison'], f'strong_eff_mpi_vs_hybrid_{matrix}.png')
-    plt.savefig(filename, dpi=300, bbox_inches='tight')
-    plt.close()
-
 print(f"\nStrong scaling plots created and saved in /comparison subfolder")
 
 

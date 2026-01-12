@@ -3,14 +3,17 @@
   133 |             int duplicate = 0;
       |                 ^~~~~~~~~
 ../src/main.c: In function ‘main’:
-../src/main.c:151:13: warning: unused variable ‘global_idx’ [-Wunused-variable]
-  151 |         int global_idx = rank + i * comm_size;
+../src/main.c:170:13: warning: unused variable ‘global_idx’ [-Wunused-variable]
+  170 |         int global_idx = rank + i * comm_size;
       |             ^~~~~~~~~~
+../src/main.c:16:9: warning: unused variable ‘provided’ [-Wunused-variable]
+   16 |     int provided;
+      |         ^~~~~~~~
 ../src/distribute.c: In function ‘generateLocalMatrix’:
 ../src/distribute.c:133:17: warning: variable ‘duplicate’ set but not used [-Wunused-but-set-variable]
   133 |             int duplicate = 0;
       |                 ^~~~~~~~~
 ../src/main.c: In function ‘main’:
-../src/main.c:151:13: warning: unused variable ‘global_idx’ [-Wunused-variable]
-  151 |         int global_idx = rank + i * comm_size;
+../src/main.c:170:13: warning: unused variable ‘global_idx’ [-Wunused-variable]
+  170 |         int global_idx = rank + i * comm_size;
       |             ^~~~~~~~~~

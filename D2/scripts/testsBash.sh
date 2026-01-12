@@ -14,7 +14,6 @@ MAX_PROCESSES=128
 PROCESSES=(1 2 4 8 16 32 64 128)
 
 # OpenMP Configuration
-OMP_NUM_THREADS=4 
 OMP_SCHEDULE="dynamic,64"
 OMP_PROC_BIND="close"
 
@@ -46,7 +45,7 @@ find_matrices() {
 compile_code() {
     rm -f "$EXEC_MPI" "$EXEC_HYBRID"
     mkdir -p "$RESULTS_DIR"
-    
+
     # Compile MPI version
     echo "Compiling MPI-only version..."
     $MPICC $CFLAGS_MPI "$SRC_DIR"/*.c -o "$EXEC_MPI"
@@ -55,7 +54,7 @@ compile_code() {
         exit 1
     fi
     echo "MPI compilation successful"
-    
+
     # Compile MPI+OpenMP version
     echo "Compiling MPI+OpenMP hybrid version..."
     $MPICC $CFLAGS_HYBRID "$SRC_DIR"/*.c -o "$EXEC_HYBRID"
@@ -72,23 +71,42 @@ run_strong_scaling() {
     local exec="$3"
     local csv_file="$4"
     local mode="$5"
-    
-    echo ""
-    echo "STRONG SCALING [$mode]: $matrix | $num_procs processes"
-    echo ""
-    
+
     local log_file="$RESULTS_DIR/logs/strong_${mode}_${matrix%.mtx}_np${num_procs}.log"
     mkdir -p "$RESULTS_DIR/logs"
-    
-    mpirun -np "$num_procs" "$exec" "$DATA_DIR/$matrix" "$REPEATS" 2>&1 | tee "$log_file" | \
-        grep "^\[RESULT\]" | sed 's/\[RESULT\] //' | \
-        awk -v matrix="${matrix%.mtx}" '{print $0","matrix}' >> "$csv_file"
-    
+
+    if [ "$mode" = "HYBRID" ]; then
+        local threads=$((PROCESSES_PER_NODE / num_procs))
+        if [ $threads -lt 1 ]; then
+            threads=1
+        fi
+        
+        echo ""
+        echo "STRONG SCALING [$mode]: $matrix | $num_procs processes | $threads threads/process"
+        echo ""
+        
+        mpirun -np "$num_procs" \
+               -env OMP_NUM_THREADS $threads \
+               -env OMP_SCHEDULE "$OMP_SCHEDULE" \
+               -env OMP_PROC_BIND "$OMP_PROC_BIND" \
+               "$exec" "$DATA_DIR/$matrix" "$REPEATS" 2>&1 | tee "$log_file" | \
+            grep "^\[RESULT\]" | sed 's/\[RESULT\] //' | \
+            awk -v matrix="${matrix%.mtx}" '{print $0","matrix}' >> "$csv_file"
+    else
+        echo ""
+        echo "STRONG SCALING [$mode]: $matrix | $num_procs processes"
+        echo ""
+        
+        mpirun -np "$num_procs" "$exec" "$DATA_DIR/$matrix" "$REPEATS" 2>&1 | tee "$log_file" | \
+            grep "^\[RESULT\]" | sed 's/\[RESULT\] //' | \
+            awk -v matrix="${matrix%.mtx}" '{print $0","matrix}' >> "$csv_file"
+    fi
+
     if [ ${PIPESTATUS[0]} -ne 0 ]; then
         echo "ERROR: MPI execution failed"
         return 1
     fi
-    
+
     echo " -> Data appended to: $csv_file"
     echo " -> Full log saved to: $log_file"
 }
@@ -99,22 +117,40 @@ run_weak_scaling() {
     local csv_file="$3"
     local mode="$4"
     local total_rows=$((ROWS_PER_PROC * num_procs))
-    
-    echo ""
-    echo "WEAK SCALING [$mode]: $num_procs processes | ${total_rows} total rows"
-    echo ""
-    
+
     local log_file="$RESULTS_DIR/logs/weak_${mode}_np${num_procs}.log"
     mkdir -p "$RESULTS_DIR/logs"
-    
-    mpirun -np "$num_procs" "$exec" synthetic "$REPEATS" "$ROWS_PER_PROC" "$NNZ_PER_ROW" 2>&1 | \
-        tee "$log_file" | grep "^\[RESULT\]" | sed 's/\[RESULT\] //' >> "$csv_file"
-    
+
+    if [ "$mode" = "HYBRID" ]; then
+        local threads=$((PROCESSES_PER_NODE / num_procs))
+        if [ $threads -lt 1 ]; then
+            threads=1
+        fi
+        
+        echo ""
+        echo "WEAK SCALING [$mode]: $num_procs processes | ${total_rows} total rows | $threads threads/process"
+        echo ""
+        
+        mpirun -np "$num_procs" \
+               -env OMP_NUM_THREADS $threads \
+               -env OMP_SCHEDULE "$OMP_SCHEDULE" \
+               -env OMP_PROC_BIND "$OMP_PROC_BIND" \
+               "$exec" synthetic "$REPEATS" "$ROWS_PER_PROC" "$NNZ_PER_ROW" 2>&1 | \
+            tee "$log_file" | grep "^\[RESULT\]" | sed 's/\[RESULT\] //' >> "$csv_file"
+    else
+        echo ""
+        echo "WEAK SCALING [$mode]: $num_procs processes | ${total_rows} total rows"
+        echo ""
+        
+        mpirun -np "$num_procs" "$exec" synthetic "$REPEATS" "$ROWS_PER_PROC" "$NNZ_PER_ROW" 2>&1 | \
+            tee "$log_file" | grep "^\[RESULT\]" | sed 's/\[RESULT\] //' >> "$csv_file"
+    fi
+
     if [ ${PIPESTATUS[0]} -ne 0 ]; then
         echo "ERROR: MPI execution failed"
         return 1
     fi
-    
+
     echo " -> Data appended to: $csv_file"
     echo " -> Full log saved to: $log_file"
 }
@@ -125,11 +161,11 @@ initialize_csv_files() {
     echo "rank,num_procs,run,elapsed_time,comm_time,local_nz,ghost_entries,local_flops" > "$WEAK_SCALING_CSV"
     echo "rank,num_procs,run,elapsed_time,comm_time,local_nz,ghost_entries,local_flops,matrix" > "$STRONG_SCALING_HYBRID_CSV"
     echo "rank,num_procs,run,elapsed_time,comm_time,local_nz,ghost_entries,local_flops" > "$WEAK_SCALING_HYBRID_CSV"
-    
     echo "CSV files initialized"
 }
 
 # Main execution
+
 rm -rf "$RESULTS_DIR"/logs
 rm -f "$STRONG_SCALING_CSV" "$WEAK_SCALING_CSV" "$STRONG_SCALING_HYBRID_CSV" "$WEAK_SCALING_HYBRID_CSV"
 mkdir -p "$RESULTS_DIR"
@@ -138,15 +174,11 @@ find_matrices
 compile_code
 initialize_csv_files
 
-echo ""
-echo "=========================================="
-echo "PHASE 1: MPI-ONLY TESTS"
-echo "=========================================="
-
 # Strong Scaling - MPI
 echo ""
 echo "Strong Scaling Tests (MPI-only):"
 echo ""
+
 for matrix in "${MATRICES[@]}"; do
     echo ""
     echo "Testing matrix: $matrix"
@@ -163,6 +195,7 @@ done
 echo ""
 echo "Weak Scaling Tests (MPI-only):"
 echo ""
+
 for num_procs in "${PROCESSES[@]}"; do
     if [ "$num_procs" -le "$MAX_PROCESSES" ]; then
         run_weak_scaling "$num_procs" "$EXEC_MPI" "$WEAK_SCALING_CSV" "MPI"
@@ -170,22 +203,11 @@ for num_procs in "${PROCESSES[@]}"; do
     fi
 done
 
-echo ""
-echo "=========================================="
-echo "PHASE 2: MPI+OpenMP HYBRID TESTS"
-echo "=========================================="
-echo "OpenMP Configuration: $OMP_NUM_THREADS threads, schedule($OMP_SCHEDULE), bind($OMP_PROC_BIND)"
-echo ""
-
-# Set OpenMP environment variables
-export OMP_NUM_THREADS=$OMP_NUM_THREADS
-export OMP_SCHEDULE=$OMP_SCHEDULE
-export OMP_PROC_BIND=$OMP_PROC_BIND
-
 # Strong Scaling - MPI+OpenMP
 echo ""
 echo "Strong Scaling Tests (MPI+OpenMP):"
 echo ""
+
 for matrix in "${MATRICES[@]}"; do
     echo ""
     echo "Testing matrix: $matrix"
@@ -202,6 +224,7 @@ done
 echo ""
 echo "Weak Scaling Tests (MPI+OpenMP):"
 echo ""
+
 for num_procs in "${PROCESSES[@]}"; do
     if [ "$num_procs" -le "$MAX_PROCESSES" ]; then
         run_weak_scaling "$num_procs" "$EXEC_HYBRID" "$WEAK_SCALING_HYBRID_CSV" "HYBRID"
@@ -213,15 +236,15 @@ echo ""
 echo "BENCHMARK SUMMARY"
 echo ""
 echo "Results Files:"
-echo " MPI Strong Scaling:   $STRONG_SCALING_CSV"
-echo " MPI Weak Scaling:     $WEAK_SCALING_CSV"
-echo " MPI+OpenMP Strong Scaling:     $STRONG_SCALING_HYBRID_CSV"
-echo " MPI+OpenMP Weak Scaling:       $WEAK_SCALING_HYBRID_CSV"
-echo " Full Logs:                 $RESULTS_DIR/logs/"
+echo " MPI Strong Scaling: $STRONG_SCALING_CSV"
+echo " MPI Weak Scaling: $WEAK_SCALING_CSV"
+echo " MPI+OpenMP Strong Scaling: $STRONG_SCALING_HYBRID_CSV"
+echo " MPI+OpenMP Weak Scaling: $WEAK_SCALING_HYBRID_CSV"
+echo " Full Logs: $RESULTS_DIR/logs/"
 echo ""
 echo "Data points collected:"
-echo " MPI Strong:    $(tail -n +2 "$STRONG_SCALING_CSV" | wc -l) measurements"
-echo " MPI Weak:      $(tail -n +2 "$WEAK_SCALING_CSV" | wc -l) measurements"
+echo " MPI Strong: $(tail -n +2 "$STRONG_SCALING_CSV" | wc -l) measurements"
+echo " MPI Weak: $(tail -n +2 "$WEAK_SCALING_CSV" | wc -l) measurements"
 echo " MPI+OpenMP Strong: $(tail -n +2 "$STRONG_SCALING_HYBRID_CSV" | wc -l) measurements"
-echo " MPI+OpenMP Weak:   $(tail -n +2 "$WEAK_SCALING_HYBRID_CSV" | wc -l) measurements"
+echo " MPI+OpenMP Weak: $(tail -n +2 "$WEAK_SCALING_HYBRID_CSV" | wc -l) measurements"
 echo ""

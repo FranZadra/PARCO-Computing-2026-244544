@@ -3,13 +3,32 @@
 #include <string.h>
 #include <time.h>
 #include <mpi.h>
+#ifdef _OPENMP
+    #include <omp.h>
+#endif
 #include "utils.h"
 #include "distribute.h"
 #include "communication.h"
 
+
 int main(int argc, char *argv[]) {
     int rank, comm_size;
-    MPI_Init(&argc, &argv);
+    int provided;
+    #ifdef _OPENMP
+        MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
+        if (provided < MPI_THREAD_FUNNELED) {
+            if (rank == 0) {
+                fprintf(stderr, "ERROR: MPI implementation does not support MPI_THREAD_FUNNELED\n");
+                fprintf(stderr, "Provided level: %d, Required: %d\n", provided, MPI_THREAD_FUNNELED);
+            }
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+        if (rank == 0) {
+            printf("MPI thread support: MPI_THREAD_FUNNELED (provided=%d)\n", provided);
+        }
+    #else
+        MPI_Init(&argc, &argv);
+    #endif
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_size);
     
