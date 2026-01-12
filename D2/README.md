@@ -147,20 +147,21 @@ Where:
 - `-fopenmp` is the flag to compile the code with OpenMP
 
 ### 3.2 Bash scripts info
-The bash script automatically tests the MPI SpMV implementation with:
+The bash script automatically tests the following MPI SpMV implementations:
 
-- **Strong Scaling**: MPI parallelization with:
-  - Processes: 1, 2, 4, 8, 16, 32, 64, 128
+- **Strong Scaling**:
+  - Number of processes: 1, 2, 4, 8, 16, 32, 64, 128
   - all `.mtx` files in the `data/` directory
   - 10 repetitions per configuration
 
 - **Weak Scaling**:
-  - Processes: 1, 2, 4, 8, 16, 32, 64, 128
+  - Number of processes: 1, 2, 4, 8, 16, 32, 64, 128
   - automatically generated synthetic matrices
   - 10 repetitions per configuration
 
-- **MPI+X**: MPI+OpenMP parallelization with:
-  - Same test parameters as before but also with OpenMP parallelization
+- **MPI+X**: 
+  - MPI+OpenMP parallelization
+  - Extends the previous tests by incorporating OpenMP multi-threading within each MPI rank to evaluate hybrid parallelization efficiency
 
 To modify these parameters, edit `scripts/testsBash.sh`:
 ```bash
