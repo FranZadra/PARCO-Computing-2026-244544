@@ -11,3 +11,10 @@ repo/
 ├── D1/                     # Deliverable 1 folder (Shared-memory programming - OpenMP)
 └── D2/                     # Deliverable 2 folder (Distributed-memory programming - MPI)
 ```
+##
+## Author
+
+Francesco Zadra  
+Student ID: 244544  
+UNITN ICE student   
+Email: francesco.zadra-1@studenti.unitn.it
