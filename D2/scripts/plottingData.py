@@ -436,7 +436,6 @@ for matrix in matrices:
 
 print(f"\nStrong scaling plots created and saved in /comparison subfolder")
 
-
 # PLOT 6: Weak Scaling - Speedup with Gustavson's Law
 print("\n" + "-"*80)
 print("Generating weak Scaling Speedup Plots with Gustavson's Law")
@@ -510,27 +509,42 @@ if len(times_weak) > 0:
     print(f"\nWeak scaling efficiency plots created and saved in /weak_scaling subfolder")
     plt.close()
 
-# PLOT 8: Weak Scaling - Execution time
+# PLOT 8: Weak Scaling - Execution Time + Computation vs Communication (COMBINED)
 print("\n" + "-"*80)
-print("Generating weak scaling execution time")
+print("Generating weak scaling execution time + computation vs communication (combined)")
 print("-"*80)
 
 fig, ax = plt.subplots(figsize=(10, 7))
 
-ax.plot(procs_weak, times_weak, marker='o', color='#6A4C93', 
-         linewidth=3, markersize=12, label='Execution Time')
-ax.axhline(y=baseline_weak, color='k', linestyle='--', label='Baseline (1 proc)', linewidth=2)
+comp_times_weak = weak_agg['comp_time'].values
+comm_times_weak = weak_agg['comm_time'].values
+
+x_weak = np.arange(len(procs_weak))
+width = 0.6
+
+ax.bar(x_weak, comp_times_weak, width, label='Computation Time', color='steelblue', alpha=0.8)
+ax.bar(x_weak, comm_times_weak, width, bottom=comp_times_weak,
+       label='Communication Time', color='coral', alpha=0.8)
+
+ax.plot(x_weak, times_weak, marker='o', color='#6A4C93',
+        linewidth=3, markersize=12, label='Total Execution Time', zorder=10)
+
+ax.axhline(y=baseline_weak, color='gray', linestyle='--',
+           label='Baseline (1 proc)', linewidth=2, alpha=0.7, zorder=5)
+
 ax.set_xlabel('Number of Processes', fontsize=13, fontweight='bold')
 ax.set_ylabel('Execution Time (s)', fontsize=13, fontweight='bold')
-ax.set_title('Weak Scaling - Execution Time', fontsize=14, fontweight='bold')
-ax.legend(fontsize=12)
-ax.grid(True, alpha=0.3)
-ax.set_xscale('log', base=2)
+ax.set_title('Weak Scaling - Execution Time & Computation vs Communication',
+             fontsize=14, fontweight='bold')
+ax.set_xticks(x_weak)
+ax.set_xticklabels(procs_weak)
+ax.legend(fontsize=11, loc='upper left')
+ax.grid(True, alpha=0.3, axis='y', zorder=0)
 
 plt.tight_layout()
-filename = os.path.join(subdirs['weak'], 'weak_scaling_time.png')
+filename = os.path.join(subdirs['weak'], 'weak_scaling_time_and_comp_vs_comm.png')
 plt.savefig(filename, dpi=300, bbox_inches='tight')
-print(f"\nWeak scaling execution timeplots created and saved in /weak_scaling subfolder")
+print(f"\nWeak scaling combined plot created and saved in /weak_scaling subfolder")
 plt.close()
 
 # PLOT 9: Weak Scaling - MPI vs MPI+OpenMP

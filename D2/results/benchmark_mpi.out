@@ -1,11 +1,11 @@
  ----- 
 MPI SpMV BENCHMARK JOB
  ----- 
-Job ID:            4988565.hpc-head-n1.unitn.it
+Job ID:            4991625.hpc-head-n1.unitn.it
 Job Name:          spmv_mpi
 Queue:             short_cpuQ
 Working Directory: /home/francesco.zadra-1/D2/scripts
-Start time:        Sun Jan 11 20:39:56 CET 2026
+Start time:        Mon Jan 12 21:13:17 CET 2026
 
 --- PBS Resource Request ---
 Nodes:             4
@@ -17,7 +17,7 @@ Walltime:          06:00:00
  ----- 
 
 Saving system information...
-System info saved to: ../results/system_info_4988565.hpc-head-n1.unitn.it.txt
+System info saved to: ../results/system_info_4991625.hpc-head-n1.unitn.it.txt
 
 Verifying environment...
 Configuring MPI environment...
@@ -563,13 +563,13 @@ Results Files:
  Full Logs: ../results/logs/
 
 Data points collected:
- MPI Strong: 12749 measurements
+ MPI Strong: 12750 measurements
  MPI Weak: 2550 measurements
- MPI+OpenMP Strong: 12750 measurements
+ MPI+OpenMP Strong: 12749 measurements
  MPI+OpenMP Weak: 2550 measurements
 
 
 --------------------------
 Job completed successfully!
-End time: Sun Jan 11 21:31:08 CET 2026
+End time: Mon Jan 12 22:14:20 CET 2026
 --------------------------

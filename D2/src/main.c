@@ -129,9 +129,7 @@ int main(int argc, char *argv[]) {
         generateLocalMatrix(&localMatrix, rows_per_proc, matrixCols, nnz_per_row, rank, comm_size);
         
         int local_nz = localMatrix.nz;
-
         MPI_Barrier(MPI_COMM_WORLD);
-        
         MPI_Allreduce(&local_nz, &matrixNz, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
     }
         
@@ -149,7 +147,7 @@ int main(int argc, char *argv[]) {
         printf("Ghost columns identified: %d total ghost values needed\n", commPattern.num_ghost_cols);
     }
     
-    // RANDOM VECTOR DISTRIBUTION - CYCLIC
+    // RANDOM VECTOR DISTRIBUTION
     // Owner of element i is: rank = i % comm_size
     int local_vec_size = matrixCols / comm_size;
     if (rank < (matrixCols % comm_size)) {
