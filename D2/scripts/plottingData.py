@@ -24,7 +24,7 @@ def calculate_90th_percentile(df):
     group_cols = ['num_procs', 'rank']
     if 'matrix' in df.columns:
         group_cols.append('matrix')
-    
+
     percentile_data = df.groupby(group_cols).agg({
         'elapsed_time': lambda x: np.percentile(x, 90),
         'comm_time': lambda x: np.percentile(x, 90),
@@ -32,10 +32,10 @@ def calculate_90th_percentile(df):
         'ghost_entries': 'first',
         'local_flops': 'first'
     }).reset_index()
-    
+
     # Computation time
     percentile_data['comp_time'] = percentile_data['elapsed_time'] - percentile_data['comm_time']
-    
+
     return percentile_data
 
 # Amdahl law for strong scaling
@@ -47,20 +47,20 @@ def amdahl_law(p, parallel_fraction):
 def estimate_parallel_fraction(procs, times):
     if len(procs) < 2:
         return 0.95  
-    
+
     best_fraction = 0.95
     best_error = float('inf')
-    
+
     baseline = times[0]
     actual_speedup = baseline / times
-    
+
     for frac in np.linspace(0.5, 0.99, 50):
         predicted_speedup = np.array([amdahl_law(p, frac) for p in procs])
         error = np.sum((actual_speedup - predicted_speedup) ** 2)
         if error < best_error:
             best_error = error
             best_fraction = frac
-    
+
     return best_fraction
 
 # Gustavson law for weak scaling
@@ -71,12 +71,12 @@ def gustafson_law(p, serial_fraction):
 def estimate_serial_fraction_weak(procs, times):
     if len(procs) < 2:
         return 0.05 
-    
+
     baseline = times[0]
-    
+
     best_fraction = 0.05
     best_error = float('inf')
-    
+
     for s_frac in np.linspace(0.001, 0.3, 100):
         predicted_speedup = np.array([gustafson_law(p, s_frac) for p in procs])
         actual_scaled_speedup = procs * (baseline / times)
@@ -84,7 +84,7 @@ def estimate_serial_fraction_weak(procs, times):
         if error < best_error:
             best_error = error
             best_fraction = s_frac
-    
+
     return best_fraction
 
 # Load CSV results
@@ -142,8 +142,8 @@ strong_hybrid_agg.columns = ['num_procs', 'matrix', 'elapsed_time', 'comm_time',
 
 weak_agg = weak_90th.groupby(['num_procs']).agg({
     'elapsed_time': 'max',
-    'comm_time': 'mean',
-    'comp_time': 'mean',
+    'comm_time': 'max',
+    'comp_time': 'max',
     'local_nz': ['min', 'mean', 'max'],
     'ghost_entries': ['min', 'mean', 'max']
 }).reset_index()
@@ -175,37 +175,38 @@ print("-"*80)
 
 for matrix in matrices:
     fig, ax = plt.subplots(figsize=(10, 7))
-    
+
     matrix_data = strong_agg[strong_agg['matrix'] == matrix].sort_values('num_procs')
     procs = matrix_data['num_procs'].values
     times = matrix_data['elapsed_time'].values
-    
+
     if len(times) == 0:
         continue
-    
+
     baseline = times[0]
     speedup = baseline / times
-    
+
     parallel_frac = estimate_parallel_fraction(procs, times)
-    
+
     # Amdahl calculation
     procs_continuous = np.logspace(0, np.log2(procs[-1]), 100, base=2)
     amdahl_speedup = np.array([amdahl_law(p, parallel_frac) for p in procs_continuous])
-    
+
     # Plot
     ax.plot(procs, speedup, marker='o', label='Actual Speedup', linewidth=2.5, markersize=10, color='#2E86AB')
     ax.plot(procs, procs / procs[0], 'k--', label='Ideal (Linear)', linewidth=2)
     ax.plot(procs_continuous, amdahl_speedup, '-.', label=f'Amdahl (p={parallel_frac:.2f})', 
             linewidth=2, color='#E63946')
-    
+
     ax.set_xlabel('Number of Processes', fontsize=13, fontweight='bold')
-    ax.set_ylabel('Speedup', fontsize=13, fontweight='bold')
+    ax.set_ylabel('Speedup (x)', fontsize=13, fontweight='bold')
     ax.set_title(f'Strong Scaling - Speedup with Amdahl\'s Law ({matrix})', fontsize=14, fontweight='bold')
     ax.legend(fontsize=11)
     ax.grid(True, alpha=0.3)
     ax.set_xscale('log', base=2)
     ax.set_yscale('log', base=2)
-    
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x)}'))
+
     plt.tight_layout()
     filename = os.path.join(subdirs['strong_speedup'], f'speedup_{matrix}.png')
     plt.savefig(filename, dpi=300, bbox_inches='tight')
@@ -220,24 +221,24 @@ print("-"*80)
 
 for matrix in matrices:
     fig, ax = plt.subplots(figsize=(10, 7))
-    
+
     matrix_data = strong_agg[strong_agg['matrix'] == matrix].sort_values('num_procs')
     procs = matrix_data['num_procs'].values
-    comp_times = matrix_data['comp_time'].values
-    comm_times = matrix_data['comm_time'].values
-    
+    comp_times = matrix_data['comp_time'].values * 1000
+    comm_times = matrix_data['comm_time'].values * 1000
+
     x = np.arange(len(procs))
     width = 0.6
     ax.bar(x, comp_times, width, label='Computation Time', color='steelblue')
     ax.bar(x, comm_times, width, bottom=comp_times, label='Communication Time', color='coral')
     ax.set_xlabel('Number of Processes', fontsize=13, fontweight='bold')
-    ax.set_ylabel('Execution Time (s)', fontsize=13, fontweight='bold')
+    ax.set_ylabel('Execution Time (ms)', fontsize=13, fontweight='bold')
     ax.set_title(f'Computation vs Communication Time ({matrix})', fontsize=14, fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(procs)
     ax.legend(fontsize=11)
     ax.grid(True, alpha=0.3, axis='y')
-    
+
     plt.tight_layout()
     filename = os.path.join(subdirs['strong_comp_comm'], f'comp_vs_comm_{matrix}.png')
     plt.savefig(filename, dpi=300, bbox_inches='tight')
@@ -265,11 +266,11 @@ for matrix in matrices:
 
     procs = common
 
-    comp_mpi = mpi_data['comp_time'].values
-    comm_mpi = mpi_data['comm_time'].values
+    comp_mpi = mpi_data['comp_time'].values * 1000
+    comm_mpi = mpi_data['comm_time'].values * 1000
 
-    comp_hyb = hyb_data['comp_time'].values
-    comm_hyb = hyb_data['comm_time'].values
+    comp_hyb = hyb_data['comp_time'].values * 1000
+    comm_hyb = hyb_data['comm_time'].values * 1000
 
     x = np.arange(len(procs))
     width = 0.35 
@@ -287,7 +288,7 @@ for matrix in matrices:
     ax.bar(x + width/2, comm_hyb, width, bottom=comp_hyb, label='MPI+OpenMP - Communication', color='goldenrod')
 
     ax.set_xlabel('Number of Processes', fontsize=13, fontweight='bold')
-    ax.set_ylabel('Execution Time (s)', fontsize=13, fontweight='bold')
+    ax.set_ylabel('Execution Time (ms)', fontsize=13, fontweight='bold')
     ax.set_title(f'Computation vs Communication Time - MPI vs MPI+OpenMP ({matrix})', fontsize=14, fontweight='bold')
 
     ax.set_xticks(x)
@@ -311,7 +312,7 @@ print("-"*80)
 
 for matrix in matrices:
     matrix_data = strong_agg[strong_agg['matrix'] == matrix].sort_values('num_procs')
-    
+
     comm_table = pd.DataFrame({
         'Num_Processes': matrix_data['num_procs'],
         'Ghost_Entries_Min': matrix_data['ghost_entries_min'].astype(int),
@@ -319,7 +320,7 @@ for matrix in matrices:
         'Ghost_Entries_Max': matrix_data['ghost_entries_max'].astype(int),
         'Load_Imbalance_Ratio': (matrix_data['ghost_entries_max'] / matrix_data['ghost_entries_mean']).round(3)
     })
-    
+
     filename = os.path.join(subdirs['strong_comm_volume'], f'comm_volume_{matrix}.csv')
     comm_table.to_csv(filename, index=False)
 
@@ -347,12 +348,13 @@ if len(procs) > 0:
     ax1.plot(procs, procs / procs[0], 'k--', label='Ideal', linewidth=2)
 
 ax1.set_xlabel('Number of Processes', fontsize=13, fontweight='bold')
-ax1.set_ylabel('Speedup', fontsize=13, fontweight='bold')
+ax1.set_ylabel('Speedup (x)', fontsize=13, fontweight='bold')
 ax1.set_title('Strong Scaling - Speedup Comparison', fontsize=14, fontweight='bold')
 ax1.legend(fontsize=11)
 ax1.grid(True, alpha=0.3)
 ax1.set_xscale('log', base=2)
 ax1.set_yscale('log', base=2)
+ax1.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x)}'))
 
 ax2 = axes[1]
 for matrix in matrices:
@@ -373,6 +375,7 @@ ax2.legend(fontsize=11)
 ax2.grid(True, alpha=0.3)
 ax2.set_xscale('log', base=2)
 ax2.set_ylim([0, 110])
+ax2.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x)}'))
 
 plt.tight_layout()
 filename = os.path.join(subdirs['comparison'], 'strong_scaling_comparison.png')
@@ -422,11 +425,12 @@ for matrix in matrices:
     ax.set_xscale('log', base=2)
     ax.set_yscale('log', base=2)
     ax.set_xlabel('Number of Processes', fontsize=13, fontweight='bold')
-    ax.set_ylabel('Speedup (90th percentile)', fontsize=13, fontweight='bold')
+    ax.set_ylabel('Speedup (x)', fontsize=13, fontweight='bold')
     ax.set_title(f'Strong Scaling - MPI vs MPI+OpenMP ({matrix})',
                  fontsize=14, fontweight='bold')
     ax.grid(True, alpha=0.3)
     ax.legend(fontsize=11)
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x)}'))
 
     plt.tight_layout()
     filename = os.path.join(subdirs['comparison'],
@@ -449,28 +453,29 @@ times_weak = weak_agg['elapsed_time'].values
 if len(times_weak) > 0:
     baseline_weak = times_weak[0]
     scaled_speedup = procs_weak * (baseline_weak / times_weak)
-    
+
     serial_frac = estimate_serial_fraction_weak(procs_weak, times_weak)
-    
+
     # Gustafson
     procs_continuous = np.logspace(0, np.log2(procs_weak[-1]), 100, base=2)
     gustafson_speedup = np.array([gustafson_law(p, serial_frac) for p in procs_continuous])
-    
+
     # Plot
     ax.plot(procs_weak, scaled_speedup, marker='s', label='Actual Scaled Speedup', 
             linewidth=3, markersize=12, color='#06A77D')
     ax.plot(procs_weak, procs_weak, 'k--', label='Ideal (Linear)', linewidth=2)
     ax.plot(procs_continuous, gustafson_speedup, '-.', 
             label=f'Gustafson (s={serial_frac:.3f})', linewidth=2, color='#E63946')
-    
+
     ax.set_xlabel('Number of Processes', fontsize=13, fontweight='bold')
-    ax.set_ylabel('Scaled Speedup', fontsize=13, fontweight='bold')
+    ax.set_ylabel('Scaled Speedup (x)', fontsize=13, fontweight='bold')
     ax.set_title('Weak Scaling - Scaled Speedup with Gustafson\'s Law', fontsize=14, fontweight='bold')
     ax.legend(fontsize=12)
     ax.grid(True, alpha=0.3)
     ax.set_xscale('log', base=2)
     ax.set_yscale('log', base=2)
-    
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x)}'))
+
     plt.tight_layout()
     filename = os.path.join(subdirs['weak'], 'weak_scaling_speedup.png')
     plt.savefig(filename, dpi=300, bbox_inches='tight')
@@ -486,15 +491,15 @@ fig, ax = plt.subplots(figsize=(10, 7))
 
 if len(times_weak) > 0:
     efficiency_weak = (baseline_weak / times_weak) * 100
-    
+
     gustafson_efficiency = (gustafson_speedup / procs_continuous) * 100
-    
+
     ax.plot(procs_weak, efficiency_weak, marker='s', color='#06A77D', 
              linewidth=3, markersize=12, label='Actual')
     ax.axhline(y=100, color='k', linestyle='--', label='Ideal', linewidth=2)
     ax.plot(procs_continuous, gustafson_efficiency, '-.', 
             label=f'Gustafson (s={serial_frac:.3f})', linewidth=2, color='#E63946')
-    
+
     ax.set_xlabel('Number of Processes', fontsize=13, fontweight='bold')
     ax.set_ylabel('Efficiency (%)', fontsize=13, fontweight='bold')
     ax.set_title('Weak Scaling - Efficiency', fontsize=14, fontweight='bold')
@@ -502,7 +507,8 @@ if len(times_weak) > 0:
     ax.grid(True, alpha=0.3)
     ax.set_xscale('log', base=2)
     ax.set_ylim([0, 110])
-    
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x)}'))
+
     plt.tight_layout()
     filename = os.path.join(subdirs['weak'], 'weak_scaling_efficiency.png')
     plt.savefig(filename, dpi=300, bbox_inches='tight')
@@ -516,8 +522,9 @@ print("-"*80)
 
 fig, ax = plt.subplots(figsize=(10, 7))
 
-comp_times_weak = weak_agg['comp_time'].values
-comm_times_weak = weak_agg['comm_time'].values
+comp_times_weak = weak_agg['comp_time'].values * 1000
+comm_times_weak = weak_agg['comm_time'].values * 1000
+times_weak_ms = times_weak * 1000
 
 x_weak = np.arange(len(procs_weak))
 width = 0.6
@@ -526,14 +533,14 @@ ax.bar(x_weak, comp_times_weak, width, label='Computation Time', color='steelblu
 ax.bar(x_weak, comm_times_weak, width, bottom=comp_times_weak,
        label='Communication Time', color='coral', alpha=0.8)
 
-ax.plot(x_weak, times_weak, marker='o', color='#6A4C93',
+ax.plot(x_weak, times_weak_ms, marker='o', color='#6A4C93',
         linewidth=3, markersize=12, label='Total Execution Time', zorder=10)
 
-ax.axhline(y=baseline_weak, color='gray', linestyle='--',
+ax.axhline(y=baseline_weak * 1000, color='gray', linestyle='--',
            label='Baseline (1 proc)', linewidth=2, alpha=0.7, zorder=5)
 
 ax.set_xlabel('Number of Processes', fontsize=13, fontweight='bold')
-ax.set_ylabel('Execution Time (s)', fontsize=13, fontweight='bold')
+ax.set_ylabel('Execution Time (ms)', fontsize=13, fontweight='bold')
 ax.set_title('Weak Scaling - Execution Time & Computation vs Communication',
              fontsize=14, fontweight='bold')
 ax.set_xticks(x_weak)
@@ -583,11 +590,12 @@ if len(weak_mpi_cmp) > 0 and len(weak_hyb_cmp) > 0:
     ax1.set_xscale('log', base=2)
     ax1.set_yscale('log', base=2)
     ax1.set_xlabel('Number of Processes', fontsize=13, fontweight='bold')
-    ax1.set_ylabel('Scaled Speedup (90th percentile)', fontsize=13, fontweight='bold')
+    ax1.set_ylabel('Scaled Speedup (x)', fontsize=13, fontweight='bold')
     ax1.set_title('Weak Scaling - Scaled Speedup MPI vs MPI+OpenMP',
                   fontsize=14, fontweight='bold')
     ax1.grid(True, alpha=0.3)
     ax1.legend(fontsize=11)
+    ax1.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x)}'))
 
     # Efficiency
     ax2 = axes[1]
@@ -608,6 +616,7 @@ if len(weak_mpi_cmp) > 0 and len(weak_hyb_cmp) > 0:
                   fontsize=14, fontweight='bold')
     ax2.grid(True, alpha=0.3)
     ax2.legend(fontsize=11)
+    ax2.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x)}'))
 
     plt.tight_layout()
     filename = os.path.join(subdirs['comparison'],
@@ -623,15 +632,15 @@ print("-"*80)
 
 fig, ax = plt.subplots(figsize=(10, 7))
 
-comp_times_weak = weak_agg['comp_time'].values
-comm_times_weak = weak_agg['comm_time'].values
+comp_times_weak = weak_agg['comp_time'].values * 1000
+comm_times_weak = weak_agg['comm_time'].values * 1000
 x_weak = np.arange(len(procs_weak))
 width = 0.6
 ax.bar(x_weak, comp_times_weak, width, label='Computation Time', color='steelblue')
 ax.bar(x_weak, comm_times_weak, width, bottom=comp_times_weak, 
         label='Communication Time', color='coral')
 ax.set_xlabel('Number of Processes', fontsize=13, fontweight='bold')
-ax.set_ylabel('Execution Time (s)', fontsize=13, fontweight='bold')
+ax.set_ylabel('Execution Time (ms)', fontsize=13, fontweight='bold')
 ax.set_title('Weak Scaling - Computation vs Communication Time', fontsize=14, fontweight='bold')
 ax.set_xticks(x_weak)
 ax.set_xticklabels(procs_weak)
@@ -663,6 +672,7 @@ ax.set_title('Weak Scaling - Load Balance (NNZ per Rank)', fontsize=14, fontweig
 ax.legend(fontsize=12)
 ax.grid(True, alpha=0.3)
 ax.set_xscale('log', base=2)
+ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x)}'))
 
 plt.tight_layout()
 filename = os.path.join(subdirs['weak'], 'weak_scaling_load_balance.png')

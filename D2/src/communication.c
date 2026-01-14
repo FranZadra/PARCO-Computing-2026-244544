@@ -163,7 +163,7 @@ void localSpMV(SparseMatrix *local_matrix, double *localRandVec, double *localRe
     int i, j;
     
     #ifdef _OPENMP
-        #pragma omp parallel for
+        #pragma omp parallel for schedule(dynamic, 64)
     #endif  
     for (i = 0; i < local_matrix->rows; i++) {
         double sum = 0.0;

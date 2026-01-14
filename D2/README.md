@@ -126,7 +126,7 @@ For the benchmarks, I used the following PBS settings:
 #PBS -e ../results/benchmark_mpi.err
 #PBS -q short_cpuQ
 #PBS -l walltime=06:00:00
-#PBS -l select=4:ncpus=24:mem=16gb
+#PBS -l select=6:ncpus=24:mpiprocs=24:mem=16gb
 ```
 
 ## 3. Experimental Setup

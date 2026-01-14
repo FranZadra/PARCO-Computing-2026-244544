@@ -2,20 +2,22 @@
 SYSTEM INFORMATION
  ----- 
 
-Job ID: 4991625.hpc-head-n1.unitn.it
+Job ID: 4995282.hpc-head-n1.unitn.it
 Job Name: spmv_mpi
-Date: Mon Jan 12 21:13:17 CET 2026
+Date: Wed Jan 14 08:36:10 CET 2026
 
 --- Allocated Nodes ---
-hpc-c05-node04.unitn.it
-hpc-c11-node01.unitn.it
-hpc-c11-node09.unitn.it
-hpc-c12-node23.unitn.it
+hpc-c11-node17.unitn.it
+hpc-c11-node18.unitn.it
+hpc-c11-node22.unitn.it
+hpc-c11-node30.unitn.it
+hpc-c12-node12.unitn.it
+hpc-c12-node14.unitn.it
 
-Total nodes: 4
-Total processes: 4
+Total nodes: 6
+Total processes: 6
 
---- Master Node: hpc-c11-node01.unitn.it ---
+--- Master Node: hpc-c11-node17.maas.icts.unitn.it ---
 
 --- CPU Model ---
 Model name:            Intel(R) Xeon(R) Gold 6252N CPU @ 2.30GHz
@@ -44,12 +46,12 @@ L3 cache:              36608K
 
 --- Memory Information ---
               total        used        free      shared  buff/cache   available
-Mem:           503G         17G         21G         86M        464G        485G
-Swap:          8.0G        525M        7.5G
+Mem:           503G         13G         63G        160M        426G        488G
+Swap:          8.0G        337M        7.7G
 
 --- Network Information ---
-        inet 192.168.115.136  netmask 255.255.255.0  broadcast 192.168.115.255
-        inet6 fe80::b67a:f1ff:fe0c:9889  prefixlen 64  scopeid 0x20<link>
+        inet 192.168.115.144  netmask 255.255.255.0  broadcast 192.168.115.255
+        inet6 fe80::b67a:f1ff:fe78:c12c  prefixlen 64  scopeid 0x20<link>
 --
         inet6 ::1  prefixlen 128  scopeid 0x10<host>
 
